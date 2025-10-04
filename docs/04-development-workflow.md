@@ -3,11 +3,14 @@
 ## Initial Setup
 
 ### Prerequisites
-- Node.js 18+ or Python 3.10+ (depending on your choice)
+- Node.js 18+ with npm/yarn
+- TypeScript 5.0+
 - Docker & Docker Compose
 - Git
 - PostgreSQL (if running locally without Docker)
 - Redis (if running locally without Docker)
+- Firebase Project (for authentication)
+- Firebase Admin SDK Service Account Key
 - OpenAI API Key
 
 ### Environment Setup
@@ -26,8 +29,14 @@ Each service needs its own `.env` file:
 NODE_ENV=development
 PORT=3001
 DATABASE_URL=postgresql://user:password@localhost:5432/identity_db
-JWT_SECRET=your-super-secret-jwt-key-change-in-production
-JWT_EXPIRES_IN=24h
+
+# Firebase Configuration
+FIREBASE_PROJECT_ID=your-firebase-project-id
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com
+
+# Or use service account JSON file path
+FIREBASE_SERVICE_ACCOUNT_PATH=./config/firebase-service-account.json
 ```
 
 **Course Service** (`services/course-service/.env`):
@@ -35,7 +44,15 @@ JWT_EXPIRES_IN=24h
 NODE_ENV=development
 PORT=3002
 DATABASE_URL=postgresql://user:password@localhost:5432/course_db
-JWT_SECRET=your-super-secret-jwt-key-change-in-production
+
+# Firebase Configuration
+FIREBASE_PROJECT_ID=your-firebase-project-id
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com
+
+# Or use service account JSON file path
+FIREBASE_SERVICE_ACCOUNT_PATH=./config/firebase-service-account.json
+
 IDENTITY_SERVICE_URL=http://localhost:3001
 ```
 
@@ -45,8 +62,17 @@ NODE_ENV=development
 PORT=3003
 DATABASE_URL=postgresql://user:password@localhost:5432/chat_db
 REDIS_URL=redis://localhost:6379
+
+# Firebase Configuration
+FIREBASE_PROJECT_ID=your-firebase-project-id
+FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+FIREBASE_CLIENT_EMAIL=firebase-adminsdk-xxxxx@your-project.iam.gserviceaccount.com
+
+# Or use service account JSON file path
+FIREBASE_SERVICE_ACCOUNT_PATH=./config/firebase-service-account.json
+
+# OpenAI Configuration
 OPENAI_API_KEY=sk-your-openai-api-key-here
-JWT_SECRET=your-super-secret-jwt-key-change-in-production
 CHATGPT_MODEL=gpt-3.5-turbo
 MAX_CONTEXT_MESSAGES=10
 RATE_LIMIT_MESSAGES_PER_MINUTE=20
@@ -173,43 +199,49 @@ npm run dev
 ### Layer Responsibilities
 
 #### Controllers
-- Handle HTTP requests and responses
+- Handle HTTP requests and responses with Hono Context
 - Parse and validate input parameters
 - Call service layer methods
 - Format responses with appropriate status codes
 - **Keep them thin** - no business logic here
 
-Example:
-```javascript
-// ✅ Good - Thin controller
-async function createCourse(req, res) {
+Example (using Hono):
+```typescript
+// ✅ Good - Thin controller with Hono
+import { Context } from 'hono';
+import { courseService } from '../services/courseService';
+
+export async function createCourse(c: Context) {
   try {
-    const courseData = req.body;
-    const instructorId = req.user.id; // From auth middleware
+    const courseData = await c.req.json();
+    const instructorId = c.get('user').id; // From Firebase auth middleware
     
     const course = await courseService.createCourse(courseData, instructorId);
     
-    return res.status(201).json({
+    return c.json({
       success: true,
-      data: course
-    });
-  } catch (error) {
-    return handleError(res, error);
+      data: { course }
+    }, 201);
+  } catch (error: any) {
+    return c.json({
+      success: false,
+      error: { code: error.code, message: error.message }
+    }, error.statusCode || 500);
   }
 }
 
 // ❌ Bad - Business logic in controller
-async function createCourse(req, res) {
-  const courseData = req.body;
+export async function createCourse(c: Context) {
+  const courseData = await c.req.json();
   
   // Don't do validation and business logic here
   if (courseData.price < 0) {
-    return res.status(400).json({ error: "Invalid price" });
+    return c.json({ error: "Invalid price" }, 400);
   }
   
   // Don't query database directly from controller
-  const course = await Course.create(courseData);
-  return res.json(course);
+  const course = await db.query('INSERT INTO courses...');
+  return c.json(course);
 }
 ```
 

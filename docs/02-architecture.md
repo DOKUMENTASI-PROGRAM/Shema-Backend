@@ -14,31 +14,34 @@ services/
 ### Service Details
 
 #### 1. Identity Service (Port 3001)
-**Responsibility**: User authentication and profile management
+**Responsibility**: Firebase authentication integration and user profile management
 
 **Structure**:
 ```
 identity-service/
 ├── src/
 │   ├── controllers/
-│   │   ├── authController.js      # Login endpoints
-│   │   └── userController.js      # User profile (/me)
+│   │   ├── authController.ts      # Firebase auth endpoints
+│   │   └── userController.ts      # User profile (/me)
 │   ├── models/
-│   │   └── User.js                # User model (Instructor, Student)
+│   │   └── User.ts                # User model (Instructor, Student)
 │   ├── services/
-│   │   └── authService.js         # JWT & authentication logic
+│   │   └── userService.ts         # User business logic
 │   ├── middleware/
-│   │   └── auth.js                # JWT verification
+│   │   └── auth.ts                # Firebase token verification
 │   ├── routes/
-│   │   ├── auth.js                # /v1/auth/* routes
-│   │   └── user.js                # /v1/me route
+│   │   ├── auth.ts                # /v1/auth/* routes
+│   │   └── user.ts                # /v1/me route
 │   └── config/
-│       └── database.js            # Database configuration
+│       ├── database.ts            # PostgreSQL configuration
+│       └── firebase.ts            # Firebase Admin SDK config
 ├── Dockerfile
-└── package.json
+├── package.json
+└── tsconfig.json
 ```
 
 **Database**: Users table (instructors and students)
+**External**: Firebase Authentication for token verification
 
 #### 2. Course Service (Port 3002)
 **Responsibility**: Course management and CRUD operations
@@ -48,23 +51,26 @@ identity-service/
 course-service/
 ├── src/
 │   ├── controllers/
-│   │   └── courseController.js    # Course CRUD operations
+│   │   └── courseController.ts    # Course CRUD operations
 │   ├── models/
-│   │   └── Course.js              # Course model
+│   │   └── Course.ts              # Course model
 │   ├── services/
-│   │   └── courseService.js       # Course business logic
+│   │   └── courseService.ts       # Course business logic
 │   ├── middleware/
-│   │   ├── auth.js                # JWT verification (shared)
-│   │   └── roleCheck.js           # Instructor validation
+│   │   ├── auth.ts                # Firebase token verification
+│   │   └── roleCheck.ts           # Instructor validation
 │   ├── routes/
-│   │   └── courses.js             # /v1/courses/* routes
+│   │   └── courses.ts             # /v1/courses/* routes
 │   └── config/
-│       └── database.js            # Database configuration
+│       ├── database.ts            # PostgreSQL configuration
+│       └── firebase.ts            # Firebase Admin SDK config
 ├── Dockerfile
-└── package.json
+├── package.json
+└── tsconfig.json
 ```
 
 **Database**: Courses table
+**External**: Firebase Authentication for token verification
 
 #### 3. Chat Service (Port 3003)
 **Responsibility**: AI chatbot with ChatGPT integration
@@ -74,27 +80,30 @@ course-service/
 chat-service/
 ├── src/
 │   ├── controllers/
-│   │   └── chatController.js      # Chat sessions & messages
+│   │   └── chatController.ts      # Chat sessions & messages
 │   ├── models/
-│   │   ├── ChatSession.js         # Chat session model
-│   │   └── ChatMessage.js         # Chat message model
+│   │   ├── ChatSession.ts         # Chat session model
+│   │   └── ChatMessage.ts         # Chat message model
 │   ├── services/
-│   │   ├── chatService.js         # ChatGPT API integration
-│   │   └── contextManager.js      # Context limitation logic
+│   │   ├── chatService.ts         # ChatGPT API integration
+│   │   └── contextManager.ts      # Context limitation logic
 │   ├── middleware/
-│   │   ├── auth.js                # JWT verification (shared)
-│   │   └── rateLimiter.js         # Rate limiting
+│   │   ├── auth.ts                # Firebase token verification
+│   │   └── rateLimiter.ts         # Rate limiting
 │   ├── routes/
-│   │   └── chat.js                # /v1/chat/* routes
+│   │   └── chat.ts                # /v1/chat/* routes
 │   └── config/
-│       ├── database.js            # Database configuration
-│       └── chatgpt.js             # ChatGPT API config
+│       ├── database.ts            # PostgreSQL configuration
+│       ├── firebase.ts            # Firebase Admin SDK config
+│       └── chatgpt.ts             # ChatGPT API config
 ├── Dockerfile
-└── package.json
+├── package.json
+└── tsconfig.json
 ```
 
 **Database**: ChatSessions and ChatMessages tables
 **Cache**: Redis for context management
+**External**: Firebase Authentication for token verification
 
 #### 4. API Gateway (Port 8080) - Optional
 **Responsibility**: Request routing and load balancing
@@ -104,14 +113,15 @@ chat-service/
 api-gateway/
 ├── src/
 │   ├── routes/
-│   │   └── gateway.js             # Route all requests to services
+│   │   └── gateway.ts             # Route all requests to services
 │   ├── middleware/
-│   │   ├── cors.js                # CORS handling
-│   │   └── logging.js             # Request logging
+│   │   ├── cors.ts                # CORS handling
+│   │   └── logging.ts             # Request logging
 │   └── config/
-│       └── services.js            # Service URLs
+│       └── services.ts            # Service URLs
 ├── Dockerfile
-└── package.json
+├── package.json
+└── tsconfig.json
 ```
 
 ---
@@ -154,32 +164,36 @@ Client Response (JSON format)
 
 ## Specific Flow Examples
 
-### 3. Authentication Flow
+### 3. Authentication Flow (Firebase + PostgreSQL)
 ```
-Login Request (POST /v1/auth/instructor|student/login)
+Client authenticates with Firebase (email/password, Google, etc.)
+    ↓
+Firebase returns ID Token
+    ↓
+Client sends request with Firebase ID Token to Identity Service
     ↓
 API Gateway routes to Identity Service (port 3001)
     ↓
-authController receives credentials
+authMiddleware verifies Firebase ID Token with Firebase Admin SDK
     ↓
-authService validates credentials
+Extract user info (UID, email) from verified token
     ↓
-User model queries database
+userService checks if user exists in PostgreSQL
     ↓
-Password verification (bcrypt)
+If not exists: Create user record in PostgreSQL
+If exists: Update last login timestamp
     ↓
-JWT token generation
-    ↓
-Return token + user info to client
+Return user profile from PostgreSQL to client
 ```
 
 **Key Steps**:
-1. Client sends username/email and password
-2. Controller validates request format
-3. Service queries User model
-4. Password is verified using bcrypt
-5. JWT token is generated with user info and role
-6. Token is returned to client for future requests
+1. Client authenticates with Firebase (using Firebase Client SDK)
+2. Firebase returns ID Token to client
+3. Client includes Firebase ID Token in Authorization header
+4. Backend verifies token using Firebase Admin SDK
+5. User data is synced between Firebase and PostgreSQL
+6. PostgreSQL stores additional user metadata and relationships
+7. Token is used for all subsequent API requests
 
 ### 4. Chat/ChatGPT Flow
 ```
@@ -189,7 +203,7 @@ API Gateway routes to Chat Service (port 3003)
     ↓
 Rate Limiter checks request limits
     ↓
-Auth Middleware verifies JWT token
+Auth Middleware verifies Firebase ID Token
     ↓
 chatController receives message
     ↓
@@ -207,9 +221,9 @@ Return response to client
 ```
 
 **Key Steps**:
-1. Client sends message with session ID
+1. Client sends message with session ID and Firebase ID Token
 2. Rate limiter prevents excessive API calls
-3. JWT verified to ensure authenticated user
+3. Firebase token verified to ensure authenticated user
 4. Previous context retrieved from Redis
 5. Context + new message sent to ChatGPT API
 6. Response received from ChatGPT
@@ -223,9 +237,9 @@ Course Request (POST/PUT/DELETE /v1/courses)
     ↓
 API Gateway routes to Course Service (port 3002)
     ↓
-Auth Middleware verifies JWT token
+Auth Middleware verifies Firebase ID Token
     ↓
-Role Check Middleware verifies instructor role
+Role Check Middleware verifies instructor role (from PostgreSQL)
     ↓
 Validation Middleware validates request body
     ↓
@@ -239,9 +253,9 @@ Return success/error response
 ```
 
 **Key Steps**:
-1. Client sends course data with JWT token
-2. JWT verified for authentication
-3. Role verified (must be instructor)
+1. Client sends course data with Firebase ID Token
+2. Firebase token verified for authentication
+3. User role fetched from PostgreSQL and verified (must be instructor)
 4. Request body validated (required fields, data types)
 5. Business logic applied (e.g., price validation, schedule conflicts)
 6. Database operation performed

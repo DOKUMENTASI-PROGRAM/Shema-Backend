@@ -2,218 +2,264 @@
 
 ## Authentication & Authorization
 
-### 1. Password Security
+### 1. Firebase Authentication
 
-#### Password Hashing
-**Always use bcrypt** with minimum 12 rounds for password hashing:
+#### Firebase Configuration
+**Use Firebase Admin SDK** for server-side authentication:
 
-```javascript
-// ✅ Good - Using bcrypt with proper rounds
-const bcrypt = require('bcrypt');
-const SALT_ROUNDS = 12;
+```typescript
+// ✅ Good - Firebase Admin SDK initialization
+import { initializeApp, cert } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 
-async function hashPassword(password) {
-  return await bcrypt.hash(password, SALT_ROUNDS);
-}
+// Initialize Firebase Admin
+const app = initializeApp({
+  credential: cert({
+    projectId: process.env.FIREBASE_PROJECT_ID,
+    clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+    privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+  })
+});
 
-async function verifyPassword(password, hash) {
-  return await bcrypt.compare(password, hash);
-}
-
-// Usage in registration
-const passwordHash = await hashPassword(req.body.password);
-await User.create({ email, password_hash: passwordHash });
-
-// Usage in login
-const user = await User.findByEmail(email);
-const isValid = await verifyPassword(password, user.password_hash);
+export const auth = getAuth(app);
 ```
 
-```python
-# Python with bcrypt
-import bcrypt
+```typescript
+// Or load from service account JSON file
+import { initializeApp, cert } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
+import * as serviceAccount from './config/firebase-service-account.json';
 
-def hash_password(password: str) -> str:
-    salt = bcrypt.gensalt(rounds=12)
-    return bcrypt.hashpw(password.encode('utf-8'), salt).decode('utf-8')
+const app = initializeApp({
+  credential: cert(serviceAccount as any)
+});
 
-def verify_password(password: str, hash: str) -> bool:
-    return bcrypt.checkpw(password.encode('utf-8'), hash.encode('utf-8'))
+export const auth = getAuth(app);
 ```
 
-#### Password Requirements
-```javascript
-function validatePassword(password) {
-  const errors = [];
-  
-  if (password.length < 8) {
-    errors.push('Password must be at least 8 characters');
-  }
-  
-  if (!/[A-Z]/.test(password)) {
-    errors.push('Password must contain at least one uppercase letter');
-  }
-  
-  if (!/[a-z]/.test(password)) {
-    errors.push('Password must contain at least one lowercase letter');
-  }
-  
-  if (!/[0-9]/.test(password)) {
-    errors.push('Password must contain at least one number');
-  }
-  
-  if (!/[^A-Za-z0-9]/.test(password)) {
-    errors.push('Password must contain at least one special character');
-  }
-  
-  return errors;
-}
-```
+#### Firebase Token Verification (Hono Middleware)
+```typescript
+import { Context, Next } from 'hono';
+import { auth } from '../config/firebase';
+import { getUserByFirebaseUid, createUser } from '../services/userService';
 
-### 2. JWT Security
-
-#### Token Generation
-```javascript
-const jwt = require('jsonwebtoken');
-
-function generateToken(user) {
-  const payload = {
-    id: user.id,
-    email: user.email,
-    role: user.role
-    // ❌ Don't include sensitive data: password, ssn, etc.
-  };
-  
-  const options = {
-    expiresIn: '24h',  // Token expires in 24 hours
-    issuer: 'music-lesson-api',
-    audience: 'music-lesson-client'
-  };
-  
-  return jwt.sign(payload, process.env.JWT_SECRET, options);
-}
-```
-
-#### JWT Secret Management
-```env
-# .env file
-JWT_SECRET=your-super-secret-jwt-key-at-least-32-characters-long-change-in-production
-
-# Generate strong secret
-node -e "console.log(require('crypto').randomBytes(64).toString('hex'))"
-```
-
-#### Token Verification Middleware
-```javascript
-async function authMiddleware(req, res, next) {
+export async function firebaseAuthMiddleware(c: Context, next: Next) {
   try {
-    // Extract token from header
-    const authHeader = req.headers.authorization;
+    const authHeader = c.req.header('Authorization');
     
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
+      return c.json({
         success: false,
-        error: { 
-          code: 'UNAUTHORIZED', 
-          message: 'No token provided' 
-        }
+        error: { code: 'UNAUTHORIZED', message: 'No token provided' }
+      }, 401);
+    }
+    
+    const token = authHeader.substring(7);
+    
+    // Verify Firebase ID token
+    const decodedToken = await auth.verifyIdToken(token);
+    
+    // Sync user with PostgreSQL
+    let user = await getUserByFirebaseUid(decodedToken.uid);
+    
+    if (!user) {
+      // Create user if doesn't exist
+      user = await createUser({
+        firebase_uid: decodedToken.uid,
+        email: decodedToken.email!,
+        name: decodedToken.name || decodedToken.email!,
+        email_verified: decodedToken.email_verified || false
       });
     }
     
-    const token = authHeader.substring(7);  // Remove 'Bearer ' prefix
+    // Set user in context
+    c.set('user', user);
+    c.set('firebaseUser', decodedToken);
     
-    // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET, {
-      issuer: 'music-lesson-api',
-      audience: 'music-lesson-client'
-    });
-    
-    // Attach user info to request
-    req.user = decoded;
-    next();
-    
-  } catch (error) {
-    if (error.name === 'TokenExpiredError') {
-      return res.status(401).json({
+    await next();
+  } catch (error: any) {
+    if (error.code === 'auth/id-token-expired') {
+      return c.json({
         success: false,
-        error: { 
-          code: 'TOKEN_EXPIRED', 
-          message: 'Token has expired' 
-        }
-      });
+        error: { code: 'TOKEN_EXPIRED', message: 'Token has expired' }
+      }, 401);
     }
     
-    return res.status(401).json({
+    return c.json({
       success: false,
-      error: { 
-        code: 'INVALID_TOKEN', 
-        message: 'Invalid token' 
-      }
-    });
+      error: { code: 'INVALID_TOKEN', message: 'Invalid token' }
+    }, 401);
   }
 }
 ```
 
-#### Refresh Token Pattern (Optional)
-```javascript
-// Generate both access and refresh tokens
-function generateTokens(user) {
-  const accessToken = jwt.sign(
-    { id: user.id, email: user.email, role: user.role },
-    process.env.JWT_SECRET,
-    { expiresIn: '15m' }  // Short-lived
-  );
-  
-  const refreshToken = jwt.sign(
-    { id: user.id, type: 'refresh' },
-    process.env.JWT_REFRESH_SECRET,
-    { expiresIn: '7d' }  // Long-lived
-  );
-  
-  // Store refresh token in database
-  await RefreshToken.create({
-    user_id: user.id,
-    token: refreshToken,
-    expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
-  });
-  
-  return { accessToken, refreshToken };
+#### Client-Side Authentication (Firebase Client SDK)
+```typescript
+// Client-side: Sign in with email/password
+import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
+
+const auth = getAuth();
+const userCredential = await signInWithEmailAndPassword(
+  auth, 
+  'user@example.com', 
+  'password'
+);
+
+// Get Firebase ID token
+const idToken = await userCredential.user.getIdToken();
+
+// Use token in API requests
+fetch('http://localhost:3001/v1/auth/verify', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${idToken}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({ role: 'instructor' })
+});
+```
+
+#### Password Requirements (Firebase)
+Firebase automatically enforces password requirements:
+- Minimum 6 characters (configurable in Firebase Console)
+- Can enforce email verification before access
+- Supports password reset via email
+- Built-in rate limiting and breach detection
+
+### 2. Firebase Token Security
+
+#### Token Management
+Firebase handles token generation and management automatically:
+- **ID Tokens**: Short-lived (1 hour), used for API authentication
+- **Refresh Tokens**: Long-lived, automatically refreshes ID tokens
+- **Custom Claims**: Can add custom user roles/permissions
+
+```typescript
+// Set custom claims (admin/backend only)
+import { auth } from '../config/firebase';
+
+export async function setUserRole(uid: string, role: string) {
+  await auth.setCustomUserClaims(uid, { role });
 }
+
+// Verify token with custom claims
+export async function verifyTokenWithRole(token: string) {
+  const decodedToken = await auth.verifyIdToken(token);
+  
+  // Check custom claims
+  if (decodedToken.role !== 'instructor') {
+    throw new Error('Insufficient permissions');
+  }
+  
+  return decodedToken;
+}
+```
+
+#### Token Verification Best Practices
+```typescript
+// ✅ Good - Comprehensive token verification
+import { auth } from '../config/firebase';
+import { Context, Next } from 'hono';
+
+export async function firebaseAuthMiddleware(c: Context, next: Next) {
+  try {
+    const token = c.req.header('Authorization')?.replace('Bearer ', '');
+    
+    if (!token) {
+      return c.json({ error: 'No token provided' }, 401);
+    }
+    
+    // Verify token and check if revoked
+    const decodedToken = await auth.verifyIdToken(token, true);
+    
+    // Check email verification if required
+    if (!decodedToken.email_verified) {
+      return c.json({ error: 'Email not verified' }, 403);
+    }
+    
+    // Check if user is disabled
+    const userRecord = await auth.getUser(decodedToken.uid);
+    if (userRecord.disabled) {
+      return c.json({ error: 'User account disabled' }, 403);
+    }
+    
+    c.set('firebaseUser', decodedToken);
+    await next();
+  } catch (error: any) {
+    return c.json({ error: 'Invalid token' }, 401);
+  }
+}
+```
+
+#### Automatic Token Refresh (Client-Side)
+```typescript
+// Firebase SDK automatically refreshes tokens
+import { getAuth, onIdTokenChanged } from 'firebase/auth';
+
+const auth = getAuth();
+
+// Listen for token changes
+onIdTokenChanged(auth, async (user) => {
+  if (user) {
+    // Get fresh token automatically
+    const token = await user.getIdToken();
+    localStorage.setItem('authToken', token);
+  } else {
+    localStorage.removeItem('authToken');
+  }
+});
 ```
 
 ### 3. Role-Based Access Control (RBAC)
 
-#### Role Check Middleware
-```javascript
-function requireRole(...allowedRoles) {
-  return (req, res, next) => {
-    if (!req.user) {
-      return res.status(401).json({
+#### Role Check Middleware (Hono)
+```typescript
+import { Context, Next } from 'hono';
+
+export function requireRole(...allowedRoles: string[]) {
+  return async (c: Context, next: Next) => {
+    const user = c.get('user');
+    
+    if (!user) {
+      return c.json({
         success: false,
         error: { 
           code: 'UNAUTHORIZED', 
           message: 'Authentication required' 
         }
-      });
+      }, 401);
     }
     
-    if (!allowedRoles.includes(req.user.role)) {
-      return res.status(403).json({
+    if (!allowedRoles.includes(user.role)) {
+      return c.json({
         success: false,
         error: { 
           code: 'FORBIDDEN', 
           message: `Access denied. Required role: ${allowedRoles.join(' or ')}` 
         }
-      });
+      }, 403);
     }
     
-    next();
+    await next();
   };
 }
 
-// Usage
-router.post('/courses', authMiddleware, requireRole('instructor'), createCourse);
-router.delete('/courses/:id', authMiddleware, requireRole('instructor'), deleteCourse);
+// Usage with Hono
+import { Hono } from 'hono';
+
+const app = new Hono();
+
+app.post('/courses', 
+  firebaseAuthMiddleware, 
+  requireRole('instructor'), 
+  createCourse
+);
+
+app.delete('/courses/:id', 
+  firebaseAuthMiddleware, 
+  requireRole('instructor'), 
+  deleteCourse
+);
 ```
 
 #### Resource Ownership Check

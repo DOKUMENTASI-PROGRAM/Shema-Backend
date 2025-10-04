@@ -27,9 +27,10 @@ The system aims to provide a comprehensive platform for music lesson management 
 The application is divided into **three independent microservices**:
 
 ### 1. Identity Service
-- Handles user authentication and authorization
-- Manages user profiles and sessions
-- Issues and validates JWT tokens
+- Integrates Firebase Authentication for user verification
+- Validates Firebase ID tokens
+- Manages user profiles in PostgreSQL
+- Syncs Firebase users with local database
 - Supports both instructor and student authentication
 
 ### 2. Course Service
@@ -46,13 +47,13 @@ The application is divided into **three independent microservices**:
 
 ## Technology Stack Summary
 - **Architecture**: Microservices
-- **Runtime**: Node.js / Python (to be specified)
-- **Framework**: Express.js / FastAPI (to be specified)
-- **Databases**: PostgreSQL / MySQL (separate per service)
+- **Runtime**: Node.js with TypeScript
+- **Framework**: Hono (Ultra-fast web framework for the Edge)
+- **Authentication**: Firebase Authentication + PostgreSQL
+- **Databases**: PostgreSQL (separate per service)
 - **Caching**: Redis (for chat context)
-- **Authentication**: JWT tokens
 - **Containerization**: Docker & Docker Compose
-- **External APIs**: OpenAI ChatGPT API
+- **External APIs**: OpenAI ChatGPT API, Firebase Admin SDK
 
 ## Project Benefits
 - **Scalability**: Each service can scale independently

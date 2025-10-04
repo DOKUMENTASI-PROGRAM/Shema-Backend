@@ -17,16 +17,27 @@
 - **Port**: 3001
 - **Base Path**: `/v1/auth`
 
-### 1. Instructor Login
-**Endpoint**: `POST /v1/auth/instructor/login`
+### Authentication Flow
+**Client authenticates with Firebase first**, then syncs with backend:
+1. Use Firebase Client SDK to authenticate (email/password, Google, etc.)
+2. Receive Firebase ID Token from Firebase
+3. Send Firebase ID Token to backend endpoints
+4. Backend verifies token and syncs user data to PostgreSQL
 
-**Description**: Authenticate an instructor and receive JWT token
+### 1. Verify Firebase Token & Sync User
+**Endpoint**: `POST /v1/auth/verify`
+
+**Description**: Verify Firebase ID token and sync user data to PostgreSQL
+
+**Headers**:
+```
+Authorization: Bearer {FIREBASE_ID_TOKEN}
+```
 
 **Request Body**:
 ```json
 {
-  "email": "instructor@example.com",
-  "password": "securePassword123"
+  "role": "instructor"
 }
 ```
 
@@ -35,12 +46,15 @@
 {
   "success": true,
   "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     "user": {
-      "id": "uuid-123",
+      "id": "uuid-from-postgres",
+      "firebase_uid": "firebase-user-uid",
       "email": "instructor@example.com",
+      "name": "John Doe",
       "role": "instructor",
-      "name": "John Doe"
+      "phone": "+1234567890",
+      "created_at": "2025-03-01T10:00:00Z",
+      "last_login": "2025-03-01T12:30:00Z"
     }
   }
 }
@@ -51,22 +65,28 @@
 {
   "success": false,
   "error": {
-    "code": "INVALID_CREDENTIALS",
-    "message": "Invalid email or password"
+    "code": "INVALID_TOKEN",
+    "message": "Firebase token is invalid or expired"
   }
 }
 ```
 
-### 2. Student Login
-**Endpoint**: `POST /v1/auth/student/login`
+### 2. Update User Profile
+**Endpoint**: `PATCH /v1/auth/profile`
 
-**Description**: Authenticate a student and receive JWT token
+**Description**: Update user profile information
+
+**Headers**:
+```
+Authorization: Bearer {FIREBASE_ID_TOKEN}
+```
 
 **Request Body**:
 ```json
 {
-  "email": "student@example.com",
-  "password": "securePassword123"
+  "name": "John Updated",
+  "phone": "+1234567890",
+  "bio": "Experienced music instructor"
 }
 ```
 
@@ -75,12 +95,15 @@
 {
   "success": true,
   "data": {
-    "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
     "user": {
-      "id": "uuid-456",
-      "email": "student@example.com",
-      "role": "student",
-      "name": "Jane Smith"
+      "id": "uuid-from-postgres",
+      "firebase_uid": "firebase-user-uid",
+      "email": "instructor@example.com",
+      "name": "John Updated",
+      "role": "instructor",
+      "phone": "+1234567890",
+      "bio": "Experienced music instructor",
+      "updated_at": "2025-03-01T13:00:00Z"
     }
   }
 }
@@ -93,7 +116,7 @@
 
 **Headers**:
 ```
-Authorization: Bearer {JWT_TOKEN}
+Authorization: Bearer {FIREBASE_ID_TOKEN}
 ```
 
 **Success Response** (200 OK):
@@ -101,7 +124,8 @@ Authorization: Bearer {JWT_TOKEN}
 {
   "success": true,
   "data": {
-    "id": "uuid-123",
+    "id": "uuid-from-postgres",
+    "firebase_uid": "firebase-user-uid",
     "email": "instructor@example.com",
     "role": "instructor",
     "name": "John Doe",
@@ -521,9 +545,10 @@ Content-Type: application/json
 ## API Best Practices
 
 ### Authentication
-- Include JWT token in `Authorization` header: `Bearer {token}`
-- Tokens expire after 24 hours (configurable)
-- Refresh token before expiration
+- Include Firebase ID token in `Authorization` header: `Bearer {FIREBASE_ID_TOKEN}`
+- Firebase tokens expire after 1 hour (managed by Firebase)
+- Use Firebase Client SDK to automatically refresh tokens
+- Backend verifies token on each request using Firebase Admin SDK
 
 ### Error Handling
 - All errors follow consistent format with `success`, `error.code`, and `error.message`

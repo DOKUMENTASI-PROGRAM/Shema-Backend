@@ -250,24 +250,28 @@ volumes:
 
 ## Dockerfile Examples
 
-### Multi-Stage Dockerfile (Node.js)
+### Multi-Stage Dockerfile (Node.js + TypeScript + Hono)
 
 ```dockerfile
 # services/identity-service/Dockerfile
 
-# Stage 1: Build
+# Stage 1: Build TypeScript
 FROM node:18-alpine AS builder
 
 WORKDIR /app
 
 # Copy package files
 COPY package*.json ./
+COPY tsconfig.json ./
 
-# Install dependencies
-RUN npm ci --only=production
+# Install ALL dependencies (including devDependencies for build)
+RUN npm ci
 
 # Copy source code
 COPY . .
+
+# Build TypeScript to JavaScript
+RUN npm run build
 
 # Stage 2: Production
 FROM node:18-alpine
@@ -278,9 +282,15 @@ RUN addgroup -g 1001 -S nodejs && \
 
 WORKDIR /app
 
-# Copy dependencies from builder
-COPY --from=builder --chown=nodejs:nodejs /app/node_modules ./node_modules
-COPY --chown=nodejs:nodejs . .
+# Copy package files and install production dependencies only
+COPY package*.json ./
+RUN npm ci --only=production
+
+# Copy built files from builder
+COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
+
+# Copy Firebase service account if exists
+COPY --chown=nodejs:nodejs config/ ./config/ 2>/dev/null || true
 
 # Switch to non-root user
 USER nodejs
@@ -293,10 +303,10 @@ HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
   CMD node -e "require('http').get('http://localhost:3001/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
 
 # Start application
-CMD ["node", "src/index.js"]
+CMD ["node", "dist/index.js"]
 ```
 
-### Development Dockerfile
+### Development Dockerfile (TypeScript)
 ```dockerfile
 # services/identity-service/Dockerfile.dev
 
@@ -304,11 +314,12 @@ FROM node:18-alpine
 
 WORKDIR /app
 
-# Install nodemon for hot reload
-RUN npm install -g nodemon
+# Install tsx for TypeScript hot reload
+RUN npm install -g tsx
 
 # Copy package files
 COPY package*.json ./
+COPY tsconfig.json ./
 
 # Install all dependencies (including dev)
 RUN npm install
@@ -319,8 +330,8 @@ COPY . .
 # Expose port
 EXPOSE 3001
 
-# Start with nodemon for hot reload
-CMD ["nodemon", "src/index.js"]
+# Start with tsx watch mode for hot reload
+CMD ["tsx", "watch", "src/index.ts"]
 ```
 
 ---
