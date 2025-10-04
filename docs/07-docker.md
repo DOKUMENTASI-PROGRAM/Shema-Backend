@@ -250,79 +250,77 @@ volumes:
 
 ## Dockerfile Examples
 
-### Multi-Stage Dockerfile (Node.js + TypeScript + Hono)
+### Multi-Stage Dockerfile (Bun + TypeScript + Hono)
 
 ```dockerfile
 # services/identity-service/Dockerfile
 
 # Stage 1: Build TypeScript
-FROM node:18-alpine AS builder
+FROM oven/bun:1 AS builder
 
 WORKDIR /app
 
 # Copy package files
-COPY package*.json ./
+COPY package.json bun.lockb ./
 COPY tsconfig.json ./
 
-# Install ALL dependencies (including devDependencies for build)
-RUN npm ci
+# Install dependencies
+RUN bun install --frozen-lockfile
 
 # Copy source code
 COPY . .
 
 # Build TypeScript to JavaScript
-RUN npm run build
+RUN bun build src/index.ts --outdir dist --target bun
 
 # Stage 2: Production
-FROM node:18-alpine
+FROM oven/bun:1-slim
 
 # Create non-root user
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+RUN addgroup -g 1001 -S bunuser && \
+    adduser -S bunuser -u 1001
 
 WORKDIR /app
 
 # Copy package files and install production dependencies only
-COPY package*.json ./
-RUN npm ci --only=production
+COPY package.json bun.lockb ./
+RUN bun install --frozen-lockfile --production
 
 # Copy built files from builder
-COPY --from=builder --chown=nodejs:nodejs /app/dist ./dist
+COPY --from=builder --chown=bunuser:bunuser /app/dist ./dist
+COPY --from=builder --chown=bunuser:bunuser /app/src ./src
 
 # Copy Firebase service account if exists
-COPY --chown=nodejs:nodejs config/ ./config/ 2>/dev/null || true
+COPY --chown=bunuser:bunuser config/ ./config/ 2>/dev/null || true
 
 # Switch to non-root user
-USER nodejs
+USER bunuser
 
 # Expose port
 EXPOSE 3001
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3001/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
+  CMD bun -e "fetch('http://localhost:3001/health').then(r => process.exit(r.status === 200 ? 0 : 1))"
 
-# Start application
-CMD ["node", "dist/index.js"]
+# Start application with Bun
+CMD ["bun", "run", "src/index.ts"]
 ```
 
-### Development Dockerfile (TypeScript)
+### Development Dockerfile (Bun + TypeScript)
 ```dockerfile
 # services/identity-service/Dockerfile.dev
 
-FROM node:18-alpine
+FROM oven/bun:1
 
 WORKDIR /app
 
-# Install tsx for TypeScript hot reload
-RUN npm install -g tsx
-
 # Copy package files
-COPY package*.json ./
+COPY package.json bun.lockb ./
 COPY tsconfig.json ./
 
 # Install all dependencies (including dev)
-RUN npm install
+RUN bun install
 
 # Copy source code
 COPY . .
@@ -330,9 +328,11 @@ COPY . .
 # Expose port
 EXPOSE 3001
 
-# Start with tsx watch mode for hot reload
-CMD ["tsx", "watch", "src/index.ts"]
+# Start with Bun watch mode for hot reload (built-in)
+CMD ["bun", "--watch", "src/index.ts"]
 ```
+
+**Note**: Bun has built-in watch mode, no additional tools needed!
 
 ---
 
@@ -378,17 +378,17 @@ COPY --chown=nodejs:nodejs . .
 USER nodejs
 ```
 
-### 3. Layer Caching Optimization
+### 3. Layer Caching Optimization (Bun)
 
 ```dockerfile
 # ✅ Good - Copy package files first for better caching
-COPY package*.json ./
-RUN npm ci
+COPY package.json bun.lockb ./
+RUN bun install --frozen-lockfile
 COPY . .
 
 # ❌ Bad - Copy everything, invalidates cache on any file change
 COPY . .
-RUN npm ci
+RUN bun install
 ```
 
 ### 4. .dockerignore File
@@ -397,7 +397,6 @@ RUN npm ci
 # services/identity-service/.dockerignore
 
 node_modules
-npm-debug.log
 .env
 .env.local
 .env.production
@@ -410,32 +409,38 @@ dist
 coverage
 *.log
 .DS_Store
+bun.lockb.tmp
 ```
 
-### 5. Health Checks
+### 5. Health Checks (Bun)
 
 ```dockerfile
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:3001/health || exit 1
+  CMD bun -e "fetch('http://localhost:3001/health').then(r => process.exit(r.status === 200 ? 0 : 1))"
 ```
 
-```javascript
-// Health check endpoint
-app.get('/health', async (req, res) => {
+```typescript
+// Health check endpoint with Hono
+import { Hono } from 'hono';
+
+const app = new Hono();
+
+app.get('/health', async (c) => {
   try {
     // Check database connection
     await pool.query('SELECT 1');
     
-    res.status(200).json({
+    return c.json({
       status: 'healthy',
       timestamp: new Date().toISOString(),
-      service: 'identity-service'
-    });
-  } catch (error) {
-    res.status(503).json({
+      service: 'identity-service',
+      runtime: 'bun'
+    }, 200);
+  } catch (error: any) {
+    return c.json({
       status: 'unhealthy',
       error: error.message
-    });
+    }, 503);
   }
 });
 ```

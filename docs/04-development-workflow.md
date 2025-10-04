@@ -3,8 +3,7 @@
 ## Initial Setup
 
 ### Prerequisites
-- Node.js 18+ with npm/yarn
-- TypeScript 5.0+
+- Bun 1.0+ (replaces Node.js and npm)
 - Docker & Docker Compose
 - Git
 - PostgreSQL (if running locally without Docker)
@@ -143,19 +142,14 @@ docker-compose down -v
 ```bash
 cd services/identity-service
 
-# Install dependencies (Node.js)
-npm install
-
-# Or for Python
-pip install -r requirements.txt
+# Install dependencies with Bun
+bun install
 
 # Run database migrations
-npm run migrate
-# Or: python manage.py migrate
+bun run migrate
 
-# Start development server
-npm run dev
-# Or: python app.py
+# Start development server with hot reload
+bun run dev
 
 # Service runs on http://localhost:3001
 ```
@@ -164,9 +158,14 @@ npm run dev
 ```bash
 cd services/course-service
 
-npm install
-npm run migrate
-npm run dev
+# Install dependencies
+bun install
+
+# Run migrations
+bun run migrate
+
+# Start development server
+bun run dev
 
 # Service runs on http://localhost:3002
 ```
@@ -175,9 +174,14 @@ npm run dev
 ```bash
 cd services/chat-service
 
-npm install
-npm run migrate
-npm run dev
+# Install dependencies
+bun install
+
+# Run migrations
+bun run migrate
+
+# Start development server
+bun run dev
 
 # Service runs on http://localhost:3003
 ```
@@ -186,8 +190,11 @@ npm run dev
 ```bash
 cd services/api-gateway
 
-npm install
-npm run dev
+# Install dependencies
+bun install
+
+# Start development server
+bun run dev
 
 # Gateway runs on http://localhost:8080
 ```
@@ -448,39 +455,43 @@ const courseService = new CourseService(courseRepository, userRepository);
 ### Database Migration
 ```bash
 # Create new migration
-npm run migrate:create -- add_courses_table
+bun run migrate:create -- add_courses_table
 
 # Run migrations
-npm run migrate:up
+bun run migrate:up
 
 # Rollback migration
-npm run migrate:down
+bun run migrate:down
 
 # Check migration status
-npm run migrate:status
+bun run migrate:status
 ```
 
 ### Adding Dependencies
 ```bash
 # Install for specific service
 cd services/identity-service
-npm install package-name
 
-# Or for Python
-pip install package-name
-pip freeze > requirements.txt
+# Add dependency
+bun add package-name
+
+# Add dev dependency
+bun add -d package-name
+
+# Remove dependency
+bun remove package-name
 ```
 
 ### Code Formatting
 ```bash
-# Format code (if using Prettier/Black)
-npm run format
+# Format code (if using Prettier)
+bun run format
 
 # Lint code
-npm run lint
+bun run lint
 
 # Fix linting issues
-npm run lint:fix
+bun run lint:fix
 ```
 
 ---

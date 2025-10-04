@@ -11,14 +11,16 @@ This document summarizes the architectural changes from the original Express.js 
 
 ### Before (Original Design)
 - **Framework**: Express.js
-- **Runtime**: Node.js / Python
+- **Runtime**: Node.js with npm
+- **Language**: JavaScript
 - **Authentication**: Custom JWT implementation with bcrypt
 - **Password Storage**: PostgreSQL with password_hash
 - **Token Management**: Manual JWT generation and verification
 
 ### After (New Design)
 - **Framework**: Hono (Ultra-fast Edge-first web framework)
-- **Runtime**: Node.js 18+ with TypeScript
+- **Runtime**: Bun 1.0+ (Fast all-in-one JavaScript runtime)
+- **Language**: TypeScript
 - **Authentication**: Firebase Authentication + Firebase Admin SDK
 - **User Data**: PostgreSQL stores user profiles linked to Firebase UID
 - **Token Management**: Firebase handles tokens automatically
@@ -141,9 +143,13 @@ export async function createCourse(c: Context) {
 - ✅ **Firebase Admin SDK**: Handles complex auth scenarios
 - ✅ **Auto token refresh**: Client SDK refreshes tokens automatically
 - ✅ **Type safety**: Full TypeScript support with Hono
+- ✅ **Bun speed**: 4x faster package installation than npm
+- ✅ **Built-in tools**: Bun includes bundler, test runner, package manager
 
 ### 3. Performance
 - ✅ **Hono is faster**: Ultra-fast routing and middleware
+- ✅ **Bun runtime**: 3x faster than Node.js, uses JavaScriptCore
+- ✅ **Fast startup**: Bun starts 4x faster than Node.js
 - ✅ **Edge-ready**: Can deploy to Cloudflare Workers, Deno Deploy
 - ✅ **Small bundle**: Hono is extremely lightweight
 - ✅ **Firebase CDN**: Global token verification
@@ -281,7 +287,7 @@ const courses = await fetch('http://localhost:3002/v1/courses', {
 
 ## Configuration Files
 
-### package.json (New Dependencies)
+### package.json (Bun Dependencies)
 ```json
 {
     "dependencies": {
@@ -292,17 +298,22 @@ const courses = await fetch('http://localhost:3002/v1/courses', {
     "devDependencies": {
         "typescript": "^5.3.0",
         "@types/node": "^20.0.0",
-        "tsx": "^4.0.0",
-        "vitest": "^1.0.0"
+        "bun-types": "^1.0.0"
     },
     "scripts": {
-        "dev": "tsx watch src/index.ts",
-        "build": "tsc",
-        "start": "node dist/index.js",
-        "test": "vitest"
+        "dev": "bun --watch src/index.ts",
+        "build": "bun build src/index.ts --outdir dist --target bun",
+        "start": "bun run src/index.ts",
+        "test": "bun test",
+        "test:watch": "bun test --watch"
     }
 }
 ```
+
+**Note**: 
+- No need for `tsx`, `nodemon`, or `ts-node` - Bun runs TypeScript natively
+- No need for `jest` or `vitest` - Bun has built-in test runner
+- Bun's `--watch` flag provides hot reload
 
 ### .env (Firebase Configuration)
 ```env

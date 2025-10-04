@@ -47,7 +47,8 @@ The application is divided into **three independent microservices**:
 
 ## Technology Stack Summary
 - **Architecture**: Microservices
-- **Runtime**: Node.js with TypeScript
+- **Runtime**: Bun (Fast all-in-one JavaScript runtime with built-in package manager)
+- **Language**: TypeScript
 - **Framework**: Hono (Ultra-fast web framework for the Edge)
 - **Authentication**: Firebase Authentication + PostgreSQL
 - **Databases**: PostgreSQL (separate per service)

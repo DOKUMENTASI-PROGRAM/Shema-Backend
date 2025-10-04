@@ -33,16 +33,16 @@
 - Validation logic
 - Error handling
 
-### Unit Test Structure (AAA Pattern)
+### Unit Test Structure (AAA Pattern with Bun)
 
-```javascript
-// services/courseService.test.js
-const { describe, it, expect, beforeEach, afterEach } = require('@jest/globals');
-const courseService = require('./courseService');
-const courseRepository = require('../models/courseRepository');
+```typescript
+// services/courseService.test.ts
+import { describe, it, expect, beforeEach, mock } from 'bun:test';
+import { courseService } from './courseService';
+import { courseRepository } from '../models/courseRepository';
 
-// Mock dependencies
-jest.mock('../models/courseRepository');
+// Mock dependencies with Bun
+mock.module('../models/courseRepository');
 
 describe('CourseService', () => {
   describe('createCourse', () => {
@@ -635,20 +635,21 @@ module.exports = {
 };
 ```
 
-### package.json Scripts
+### package.json Scripts (Bun)
 
 ```json
 {
   "scripts": {
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage",
-    "test:unit": "jest --testPathPattern=unit",
-    "test:integration": "jest --testPathPattern=integration",
-    "test:ci": "jest --ci --coverage --maxWorkers=2"
+    "test": "bun test",
+    "test:watch": "bun test --watch",
+    "test:coverage": "bun test --coverage",
+    "test:unit": "bun test --testNamePattern=unit",
+    "test:integration": "bun test --testNamePattern=integration"
   }
 }
 ```
+
+**Note**: Bun's test runner is built-in and extremely fast - no need to install Jest or Vitest!
 
 ---
 
@@ -692,15 +693,15 @@ jobs:
     steps:
     - uses: actions/checkout@v3
     
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
+    - name: Setup Bun
+      uses: oven-sh/setup-bun@v1
       with:
-        node-version: '18'
+        bun-version: latest
     
     - name: Install dependencies
       run: |
         cd services/identity-service
-        npm ci
+        bun install --frozen-lockfile
     
     - name: Run tests
       env:
@@ -709,10 +710,10 @@ jobs:
         TEST_DB_NAME: identity_db_test
         TEST_DB_USER: postgres
         TEST_DB_PASSWORD: postgres
-        JWT_SECRET: test-secret-key
+        FIREBASE_PROJECT_ID: test-project
       run: |
         cd services/identity-service
-        npm test
+        bun test
     
     - name: Upload coverage
       uses: codecov/codecov-action@v3
