@@ -1,0 +1,173 @@
+version: '3.8'
+
+services:
+  # ============================================
+  # REDIS - Shared Cache & Pub/Sub
+  # ============================================
+  redis:
+    image: redis:7-alpine
+    container_name: shema-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - shema-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # ============================================
+  # API GATEWAY - Port 3000
+  # ============================================
+  api-gateway:
+    build:
+      context: ./services/api-gateway
+      dockerfile: Dockerfile
+    container_name: shema-api-gateway
+    ports:
+      - "3000:3000"
+    environment:
+      - HOST=0.0.0.0
+      - PORT=3000
+      - NODE_ENV=${NODE_ENV:-development}
+      - REDIS_URL=${REDIS_URL}
+      - AUTH_SERVICE_URL=http://auth-service:3001
+      - USER_SERVICE_URL=http://user-service:3002
+      - COURSE_SERVICE_URL=http://course-service:3003
+      - BOOKING_SERVICE_URL=http://booking-service:3004
+      - CHAT_SERVICE_URL=http://chat-service:3005
+      - RECOMMENDATION_SERVICE_URL=http://recommendation-service:3006
+      - JWT_SECRET=${JWT_SECRET}
+      - SERVICE_JWT_SECRET=${SERVICE_JWT_SECRET}
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
+      - SERVICE_TIMEOUT=30000
+      - MAX_RETRIES=3
+    depends_on:
+      redis:
+        condition: service_healthy
+      auth-service:
+        condition: service_started
+      booking-service:
+        condition: service_started
+    networks:
+      - shema-network
+    restart: unless-stopped
+
+  # ============================================
+  # AUTH SERVICE - Port 3001
+  # ============================================
+  auth-service:
+    build:
+      context: ./services/auth
+      dockerfile: Dockerfile
+    container_name: shema-auth-service
+    ports:
+      - "3001:3001"
+    environment:
+      - PORT=3001
+      - NODE_ENV=${NODE_ENV:-development}
+      - REDIS_URL=${REDIS_URL}
+      - USER_SERVICE_URL=http://user-service:3002
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - SERVICE_JWT_SECRET=${SERVICE_JWT_SECRET}
+      # Supabase configuration
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+    # Note: env_file removed to prevent overriding environment variables from docker-compose
+    # All required env vars are set above from .env.production
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - shema-network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  # ============================================
+  # BOOKING SERVICE - Port 3004
+  # ============================================
+  booking-service:
+    build:
+      context: ./services/booking
+      dockerfile: Dockerfile
+    container_name: shema-booking-service
+    ports:
+      - "3004:3004"
+    environment:
+      - PORT=3004
+      - NODE_ENV=${NODE_ENV:-development}
+      - REDIS_URL=${REDIS_URL}
+      - COURSE_SERVICE_URL=http://course-service:3003
+      - SERVICE_JWT_SECRET=${SERVICE_JWT_SECRET}
+      # Supabase configuration
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+    # Note: env_file removed to prevent overriding environment variables from docker-compose
+    # All required env vars are set above from .env.production
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - shema-network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  # ============================================
+  # SUPABASE LOCAL - Port 54330 (changed to avoid conflict with Supabase CLI)
+  # ============================================
+  supabase:
+    image: supabase/postgres:15.1.0.147
+    container_name: shema-supabase
+    ports:
+      - "54330:5432"
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=postgres
+    volumes:
+      - supabase-data:/var/lib/postgresql/data
+    networks:
+      - shema-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# ============================================
+# NETWORKS
+# ============================================
+networks:
+  shema-network:
+    driver: bridge
+    name: shema-music-network
+    driver_opts:
+      com.docker.network.bridge.enable_ip_masquerade: "true"
+      com.docker.network.driver.mtu: "1500"
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+# ============================================
+# VOLUMES
+# ============================================
+volumes:
+  redis-data:
+    driver: local
+    name: shema-redis-data
+  supabase-data:
+    driver: local
+    name: shema-supabase-data
