@@ -33,13 +33,13 @@ services:
       - HOST=0.0.0.0
       - PORT=3000
       - NODE_ENV=${NODE_ENV:-development}
+      - SERVICE_NAME=api-gateway
       - REDIS_URL=${REDIS_URL}
       - AUTH_SERVICE_URL=http://auth-service:3001
-      - USER_SERVICE_URL=http://user-service:3002
+      - ADMIN_SERVICE_URL=http://admin-service:3002
       - COURSE_SERVICE_URL=http://course-service:3003
       - BOOKING_SERVICE_URL=http://booking-service:3004
-      - CHAT_SERVICE_URL=http://chat-service:3005
-      - RECOMMENDATION_SERVICE_URL=http://recommendation-service:3006
+      # RECOMMENDATION_SERVICE not implemented yet
       - JWT_SECRET=${JWT_SECRET}
       - SERVICE_JWT_SECRET=${SERVICE_JWT_SECRET}
       - CORS_ORIGIN=${CORS_ORIGIN:-*}
@@ -49,6 +49,10 @@ services:
       redis:
         condition: service_healthy
       auth-service:
+        condition: service_started
+      admin-service:
+        condition: service_started
+      course-service:
         condition: service_started
       booking-service:
         condition: service_started
@@ -69,8 +73,9 @@ services:
     environment:
       - PORT=3001
       - NODE_ENV=${NODE_ENV:-development}
+      - SERVICE_NAME=auth-service
       - REDIS_URL=${REDIS_URL}
-      - USER_SERVICE_URL=http://user-service:3002
+      - ADMIN_SERVICE_URL=http://admin-service:3002
       - JWT_SECRET=${JWT_SECRET}
       - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
       - SERVICE_JWT_SECRET=${SERVICE_JWT_SECRET}
@@ -93,19 +98,89 @@ services:
     restart: unless-stopped
 
   # ============================================
+  # ADMIN SERVICE - Port 3002
+  # ============================================
+  admin-service:
+    build:
+      context: .
+      dockerfile: ./services/admin/Dockerfile
+    container_name: shema-admin-service
+    ports:
+      - "3002:3002"
+    environment:
+      - PORT=3002
+      - NODE_ENV=${NODE_ENV:-development}
+      - SERVICE_NAME=admin-service
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - SERVICE_JWT_SECRET=${SERVICE_JWT_SECRET}
+      # Supabase configuration
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - shema-network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  # ============================================
+  # COURSE SERVICE - Port 3003
+  # ============================================
+  course-service:
+    build:
+      context: .
+      dockerfile: ./services/course/Dockerfile
+    container_name: shema-course-service
+    ports:
+      - "3003:3003"
+    environment:
+      - PORT=3003
+      - NODE_ENV=${NODE_ENV:-development}
+      - SERVICE_NAME=course-service
+      - REDIS_URL=${REDIS_URL}
+      - JWT_SECRET=${JWT_SECRET}
+      - SERVICE_JWT_SECRET=${SERVICE_JWT_SECRET}
+      # Supabase configuration
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      - CORS_ORIGIN=${CORS_ORIGIN:-*}
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - shema-network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  # ============================================
   # BOOKING SERVICE - Port 3004
   # ============================================
   booking-service:
     build:
-      context: ./services/booking
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ./services/booking/Dockerfile
     container_name: shema-booking-service
     ports:
       - "3004:3004"
     environment:
       - PORT=3004
       - NODE_ENV=${NODE_ENV:-development}
+      - SERVICE_NAME=booking-service
       - REDIS_URL=${REDIS_URL}
+      - ADMIN_SERVICE_URL=http://admin-service:3002
       - COURSE_SERVICE_URL=http://course-service:3003
       - SERVICE_JWT_SECRET=${SERVICE_JWT_SECRET}
       # Supabase configuration
@@ -117,6 +192,10 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      admin-service:
+        condition: service_started
+      course-service:
+        condition: service_started
     networks:
       - shema-network
     dns:
@@ -124,6 +203,23 @@ services:
       - 8.8.4.4
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  # ============================================
+  # DOCUMENTATION SERVICE - Port 3007
+  # ============================================
+  documentation-service:
+    build:
+      context: ./services/documentation
+      dockerfile: Dockerfile
+    container_name: shema-documentation-service
+    ports:
+      - "3007:3007"
+    environment:
+      - PORT=3007
+      - NODE_ENV=${NODE_ENV:-development}
+    networks:
+      - shema-network
     restart: unless-stopped
 
   # ============================================

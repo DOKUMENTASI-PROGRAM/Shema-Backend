@@ -1,129 +1,75 @@
-/**
- * Apply Database Migration to Supabase Production
- * Reads SQL file and executes it against Supabase
- */
+// Script untuk apply migration ke Supabase Production
+// Usage: node scripts/apply-migration.js <migration-file>
 
-const { createClient } = require('@supabase/supabase-js')
-const fs = require('fs')
-const path = require('path')
+const fs = require('fs');
+const path = require('path');
+const https = require('https');
 
-// Load environment variables
-require('dotenv').config({ path: path.join(__dirname, '..', '.env.production') })
+// Load environment
+const envPath = path.join(__dirname, '..', '.env.production');
+const envContent = fs.readFileSync(envPath, 'utf-8');
+const env = {};
+envContent.split('\n').forEach(line => {
+  const match = line.match(/^([^#=]+)=(.*)$/);
+  if (match) {
+    env[match[1].trim()] = match[2].trim();
+  }
+});
 
-const SUPABASE_URL = process.env.SUPABASE_URL
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY
+const SUPABASE_URL = env.SUPABASE_URL;
+const SERVICE_ROLE_KEY = env.SUPABASE_SERVICE_ROLE_KEY;
 
-if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-  console.error('❌ Missing Supabase credentials. Check .env.production file.')
-  process.exit(1)
-}
-
-// Migration file to apply
-const migrationFile = process.argv[2]
+// Get migration file from command line
+const migrationFile = process.argv[2];
 if (!migrationFile) {
-  console.error('❌ Usage: node apply-migration.js <migration-file.sql>')
-  console.error('Example: node apply-migration.js ../supabase/migrations/20251011000000_add_instrument_to_courses.sql')
-  process.exit(1)
+  console.error('Usage: node scripts/apply-migration.js <migration-file>');
+  process.exit(1);
 }
 
-const migrationPath = path.resolve(__dirname, migrationFile)
-
+const migrationPath = path.join(__dirname, '..', migrationFile);
 if (!fs.existsSync(migrationPath)) {
-  console.error(`❌ Migration file not found: ${migrationPath}`)
-  process.exit(1)
+  console.error(`Migration file not found: ${migrationPath}`);
+  process.exit(1);
 }
 
-// Read SQL file
-const sql = fs.readFileSync(migrationPath, 'utf-8')
+const sql = fs.readFileSync(migrationPath, 'utf-8');
 
-console.log(`📄 Reading migration: ${path.basename(migrationPath)}`)
-console.log(`🔗 Connecting to: ${SUPABASE_URL}`)
+console.log(`\n=== Applying Migration to Production ===`);
+console.log(`File: ${migrationFile}`);
+console.log(`URL: ${SUPABASE_URL}`);
+console.log(`SQL Length: ${sql.length} chars\n`);
 
-// Create Supabase client
-const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY)
+// Execute SQL using Supabase REST API (PostgREST)
+// Note: We'll use the raw SQL endpoint via a workaround
+const url = new URL('/rest/v1/rpc/exec_sql', SUPABASE_URL);
 
-async function applyMigration() {
-  try {
-    // Split SQL into individual statements (simple approach)
-    const statements = sql
-      .split(';')
-      .map(s => s.trim())
-      .filter(s => s.length > 0 && !s.startsWith('--'))
+const postData = JSON.stringify({ 
+  query: sql 
+});
 
-    console.log(`\n🚀 Applying ${statements.length} SQL statements...\n`)
-
-    for (let i = 0; i < statements.length; i++) {
-      const statement = statements[i]
-      
-      // Skip comments and empty statements
-      if (statement.startsWith('--') || statement.length === 0) continue
-
-      console.log(`[${i + 1}/${statements.length}] Executing statement...`)
-      
-      // Execute using rpc or direct query
-      const { data, error } = await supabase.rpc('exec_sql', { sql_query: statement + ';' })
-        .catch(async (err) => {
-          // If exec_sql function doesn't exist, try direct query
-          return await supabase.from('_migrations').select('*').limit(0)
-        })
-
-      if (error) {
-        console.error(`❌ Error in statement ${i + 1}:`, error.message)
-        // Continue with next statement instead of failing
-      } else {
-        console.log(`✅ Statement ${i + 1} executed successfully`)
-      }
-    }
-
-    console.log('\n✅ Migration applied successfully!')
-    console.log('\n📝 Summary:')
-    console.log(`   Migration: ${path.basename(migrationPath)}`)
-    console.log(`   Database: ${SUPABASE_URL}`)
-    console.log(`   Statements executed: ${statements.length}`)
-
-  } catch (error) {
-    console.error('❌ Migration failed:', error.message)
-    process.exit(1)
+const options = {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'Content-Length': Buffer.byteLength(postData),
+    'apikey': SERVICE_ROLE_KEY,
+    'Authorization': `Bearer ${SERVICE_ROLE_KEY}`,
+    'Prefer': 'return=representation'
   }
-}
+};
 
-// For Supabase, we need to use postgres client directly
-// Let's create a simpler approach using fetch to Supabase REST API
-async function applyMigrationDirect() {
-  try {
-    console.log('\n🔍 Note: For complex migrations, use Supabase Dashboard SQL Editor or psql CLI')
-    console.log('\n📋 SQL to execute:')
-    console.log('─'.repeat(80))
-    console.log(sql)
-    console.log('─'.repeat(80))
-    
-    console.log('\n💡 To apply this migration:')
-    console.log('1. Go to Supabase Dashboard → SQL Editor')
-    console.log('2. Copy the SQL above')
-    console.log('3. Execute it in the SQL Editor')
-    console.log('\nOr use psql:')
-    console.log(`psql "postgresql://postgres:[password]@db.xlrwvzwpecprhgzfcqxw.supabase.co:5432/postgres" -f "${migrationPath}"`)
+// Since Supabase REST API doesn't directly support arbitrary SQL,
+// we'll create a helper function or use a different approach
+// Let's use the SQL Editor API endpoint (if available)
 
-    // Try simple approach for our specific migration
-    console.log('\n🚀 Attempting to apply migration via Supabase client...')
-    
-    // Check if column already exists
-    const { data: tableInfo, error: checkError } = await supabase
-      .from('courses')
-      .select('*')
-      .limit(1)
+console.log('Note: Supabase REST API does not support arbitrary SQL execution.');
+console.log('Please apply the migration manually via Supabase Dashboard SQL Editor:');
+console.log(`\n1. Go to: ${SUPABASE_URL.replace('https://', 'https://supabase.com/dashboard/project/')}/sql/new`);
+console.log(`2. Copy the SQL from: ${migrationPath}`);
+console.log(`3. Execute in SQL Editor`);
+console.log('\nAlternatively, use psql command:');
+console.log(`psql "postgresql://postgres:shemamusic123%23@[2406:da18:243:7420:b3e5:84a4:6923:cb67]:5432/postgres" -f "${migrationFile}"`);
 
-    if (checkError) {
-      console.error('❌ Cannot connect to courses table:', checkError.message)
-      return
-    }
-
-    console.log('✅ Connected to Supabase successfully')
-    console.log('⚠️  Manual migration required via Supabase Dashboard or psql')
-    
-  } catch (error) {
-    console.error('❌ Error:', error.message)
-  }
-}
-
-applyMigrationDirect()
+console.log('\n\n=== SQL Content ===\n');
+console.log(sql);
+console.log('\n===================\n');

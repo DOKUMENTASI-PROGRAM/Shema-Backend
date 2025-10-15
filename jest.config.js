@@ -1,23 +1,30 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  roots: ['<rootDir>/services', '<rootDir>/tests'],
+  roots: ['<rootDir>/services', '<rootDir>/shared'],
   testMatch: [
-    '**/__tests__/**/*.test.ts',
     '**/?(*.)+(spec|test).ts'
+  ],
+  testPathIgnorePatterns: [
+    '<rootDir>/__tests__/integration/',
+    '<rootDir>/__tests__/e2e/',
+    '<rootDir>/node_modules/'
   ],
   transform: {
     '^.+\\.ts$': 'ts-jest',
   },
   collectCoverageFrom: [
     'services/**/*.ts',
-    '!services/**/*.d.ts',
+    'shared/**/*.ts',
     '!services/**/node_modules/**',
-    '!services/**/dist/**'
+    '!services/**/dist/**',
+    '!**/*.d.ts'
   ],
-  coverageDirectory: 'coverage',
-  coverageReporters: ['text', 'lcov', 'html'],
-  setupFilesAfterEnv: ['<rootDir>/tests/setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/__tests__/setup.ts'],
   testTimeout: 30000,
-  verbose: true
+  verbose: true,
+  forceExit: true,
+  clearMocks: true,
+  resetMocks: true,
+  restoreMocks: true
 };

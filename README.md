@@ -283,12 +283,42 @@ CORS_ORIGIN=*
 
 See [Environment Setup](./docs/environment-setup.md) for complete guide.
 
-## 🤝 Contributing
+## � Testing
+
+Comprehensive API testing has been performed on all endpoints. See testing documentation:
+
+- **[Testing Quick Start](./docs/TESTING_QUICK_START.md)** - Quick guide untuk testing API
+- **[API Endpoint Reference](./docs/API_ENDPOINT_REFERENCE.md)** - Complete API documentation
+- **[Testing Summary Report](./docs/ENDPOINT_TESTING_SUMMARY.md)** - Detailed test results
+- **[Automated Test Report](./docs/API_TESTING_REPORT.md)** - Generated test report
+
+### Running Tests
+
+```bash
+# Run automated endpoint testing
+node scripts/test-all-endpoints.js
+
+# View test reports
+code docs/ENDPOINT_TESTING_SUMMARY.md
+```
+
+### Test Results (Latest: Oct 13, 2025)
+- ✅ **10 endpoints passing** (41.67%)
+- ❌ **14 endpoints with issues** (58.33%)
+- ✅ All services healthy and running
+- ✅ Authentication working (Admin)
+- ✅ User management working (Admin)
+- ✅ Chat service working (Create session, Get messages)
+- ✅ Aggregation endpoints working
+- ⚠️ Course Service needs fixes
+- ⚠️ Booking Service needs implementation
+
+## �🤝 Contributing
 
 ### Development Workflow
 1. Read [Development Guidelines](./docs/development-guidelines.md)
 2. Follow the coding standards in [copilot-instructions.md](./.github/copilot-instructions.md)
-3. Test your changes thoroughly
+3. Test your changes thoroughly using test script
 4. Update documentation if needed
 
 ### AI Coding Assistant
