@@ -9,4 +9,4 @@ COPY . .
 
 EXPOSE 3004
 
-CMD ["bun", "run", "start"]
+CMD ["bun", "services/booking/src/index.ts"]

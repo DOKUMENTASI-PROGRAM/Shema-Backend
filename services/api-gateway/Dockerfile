@@ -29,4 +29,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD bun run -e "fetch('http://localhost:3000/health').then(r => r.status === 200 ? process.exit(0) : process.exit(1))"
 
 # Start the server
-CMD ["bun", "run", "start"]
+CMD ["bun", "src/index.ts"]

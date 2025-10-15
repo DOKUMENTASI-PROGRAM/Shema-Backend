@@ -13,4 +13,4 @@ COPY . .
 EXPOSE 3001
 
 # Start the service
-CMD ["bun", "run", "start"]
+CMD ["bun", "services/course/src/index.ts"]

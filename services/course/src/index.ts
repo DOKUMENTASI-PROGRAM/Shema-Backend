@@ -1,6 +1,7 @@
 /**
- * Booking Service
- * Course Registration & Booking Management Service
+ * Course Service - Main Entry Point
+ * Course Management Microservice for Shema Music Backend
+ * Port: 3003
  */
 
 import { Hono } from 'hono'
@@ -8,7 +9,7 @@ import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { prettyJSON } from 'hono/pretty-json'
 import { connectRedis, disconnectRedis } from '../../../shared/config/redis'
-import bookingRoutes from './routes/bookingRoutes'
+import courseRoutes from './routes/courseRoutes'
 
 const app = new Hono()
 
@@ -25,34 +26,23 @@ app.use('*', cors({
   origin: corsOrigin,
   credentials: true,
   allowHeaders: ['Content-Type', 'Authorization', 'X-Service-Name'],
-  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   maxAge: 86400,
 }))
 
-// Health check
+// Health check endpoint
 app.get('/health', (c) => {
   return c.json({
+    service: 'course-service',
     status: 'healthy',
-    service: 'booking-service',
-    environment: process.env.NODE_ENV || 'development',
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    version: '1.0.0',
+    endpoints: ['courses', 'categories', 'instructors']
   })
 })
 
-// Routes
-app.route('/api/booking', bookingRoutes)
-
-// Error handling
-app.onError((err, c) => {
-  console.error('Service error:', err)
-  return c.json({
-    success: false,
-    error: {
-      code: 'INTERNAL_SERVER_ERROR',
-      message: 'An unexpected error occurred'
-    }
-  }, 500)
-})
+// Mount course routes
+app.route('/api/courses', courseRoutes)
 
 // 404 handler
 app.notFound((c) => {
@@ -60,12 +50,26 @@ app.notFound((c) => {
     success: false,
     error: {
       code: 'NOT_FOUND',
-      message: 'Endpoint not found'
+      message: 'Route not found'
     }
   }, 404)
 })
 
-const PORT = process.env.PORT || 3004
+// Error handler
+app.onError((err, c) => {
+  console.error('Unhandled error:', err)
+  return c.json({
+    success: false,
+    error: {
+      code: 'INTERNAL_SERVER_ERROR',
+      message: 'An unexpected error occurred',
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    }
+  }, 500)
+})
+
+// Start server
+const PORT = process.env.PORT || 3003
 
 async function start() {
   try {
@@ -73,26 +77,26 @@ async function start() {
     console.log('🔄 Connecting to Redis...')
     await connectRedis()
 
-    console.log(`🚀 Booking Service starting on port ${PORT}...`)
+    console.log(`🚀 Course Service starting on port ${PORT}...`)
     console.log(`📍 Health check: http://localhost:${PORT}/health`)
-    console.log(`📅 Booking API: http://localhost:${PORT}/api/booking/*`)
+    console.log(`📚 Course API: http://localhost:${PORT}/api/courses/*`)
     console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`)
 
   } catch (error) {
-    console.error('❌ Failed to start Booking Service:', error)
+    console.error('❌ Failed to start Course Service:', error)
     process.exit(1)
   }
 }
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
-  console.log('\n🛑 Shutting down Booking Service...')
+  console.log('\n🛑 Shutting down Course Service...')
   await disconnectRedis()
   process.exit(0)
 })
 
 process.on('SIGTERM', async () => {
-  console.log('\n🛑 Shutting down Booking Service...')
+  console.log('\n🛑 Shutting down Course Service...')
   await disconnectRedis()
   process.exit(0)
 })

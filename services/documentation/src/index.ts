@@ -1,7 +1,7 @@
 /**
- * API Gateway - Main Entry Point
- * Routes requests to microservices in Shema Music Backend
- * Port: 3000
+ * Documentation Service - Main Entry Point
+ * API Documentation Service for Shema Music Backend
+ * Port: 3007
  */
 
 import { Hono } from 'hono'
@@ -9,231 +9,187 @@ import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { prettyJSON } from 'hono/pretty-json'
 import { connectRedis, disconnectRedis } from './config/redis'
-import { GATEWAY_CONFIG, SERVICE_URLS } from './config/services'
-import routes from './routes'
 
 const app = new Hono()
 
-// ============================================
-// MIDDLEWARE
-// ============================================
+// Middleware
 app.use('*', logger())
 app.use('*', prettyJSON())
 
 // CORS Configuration - Production Ready
-const corsOrigin = GATEWAY_CONFIG.NODE_ENV === 'development' 
-  ? '*' 
+const corsOrigin = process.env.NODE_ENV === 'development'
+  ? '*'
   : (process.env.CORS_ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'])
 
 app.use('*', cors({
   origin: corsOrigin,
   credentials: true,
-  allowHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'X-Service-Name'],
-  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-  maxAge: 86400, // 24 hours
-  exposeHeaders: ['Content-Length', 'X-Request-Id'],
+  allowHeaders: ['Content-Type', 'Authorization', 'X-Service-Name'],
+  allowMethods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  maxAge: 86400,
 }))
 
-// ============================================
-// HEALTH CHECK & SERVICE DISCOVERY
-// ============================================
+// Health check endpoint
 app.get('/health', (c) => {
   return c.json({
-    service: 'api-gateway',
+    service: 'documentation-service',
     status: 'healthy',
     timestamp: new Date().toISOString(),
     version: '1.0.0',
-    uptime: process.uptime(),
-    environment: GATEWAY_CONFIG.NODE_ENV,
+    docs: ['api-docs', 'swagger', 'redoc']
   })
 })
 
-app.get('/services', (c) => {
+// API Documentation routes
+app.get('/api/docs', (c) => {
   return c.json({
-    success: true,
-    data: {
-      gateway: {
-        port: GATEWAY_CONFIG.PORT,
-        environment: GATEWAY_CONFIG.NODE_ENV,
+    title: 'Shema Music API Documentation',
+    version: '1.0.0',
+    description: 'Complete API documentation for Shema Music Backend services',
+    services: [
+      {
+        name: 'API Gateway',
+        port: 3000,
+        baseUrl: 'http://localhost:3000',
+        endpoints: ['/health', '/api/*']
       },
-      services: {
-        auth: SERVICE_URLS.AUTH_SERVICE,
-        user: SERVICE_URLS.USER_SERVICE,
-        course: SERVICE_URLS.COURSE_SERVICE,
-        booking: SERVICE_URLS.BOOKING_SERVICE,
-        chat: SERVICE_URLS.CHAT_SERVICE,
-        recommendation: SERVICE_URLS.RECOMMENDATION_SERVICE,
+      {
+        name: 'Auth Service',
+        port: 3001,
+        baseUrl: 'http://localhost:3001',
+        endpoints: ['/health', '/api/auth/*', '/api/auth/firebase/*']
       },
+      {
+        name: 'Admin Service',
+        port: 3002,
+        baseUrl: 'http://localhost:3002',
+        endpoints: ['/health', '/api/admin/*']
+      },
+      {
+        name: 'Course Service',
+        port: 3003,
+        baseUrl: 'http://localhost:3003',
+        endpoints: ['/health', '/api/courses/*']
+      },
+      {
+        name: 'Booking Service',
+        port: 3004,
+        baseUrl: 'http://localhost:3004',
+        endpoints: ['/health', '/api/booking/*']
+      }
+    ],
+    environment: process.env.NODE_ENV || 'development'
+  })
+})
+
+// Swagger/OpenAPI spec endpoint
+app.get('/api/docs/swagger', (c) => {
+  return c.json({
+    openapi: '3.0.0',
+    info: {
+      title: 'Shema Music API',
+      version: '1.0.0',
+      description: 'Microservices API for Shema Music platform'
     },
+    servers: [
+      {
+        url: 'http://localhost:3000',
+        description: 'API Gateway'
+      }
+    ],
+    paths: {
+      '/health': {
+        get: {
+          summary: 'Health check',
+          responses: {
+            '200': {
+              description: 'Service is healthy'
+            }
+          }
+        }
+      }
+    }
   })
 })
 
-// Check health of all microservices with timeout
-app.get('/services/health', async (c) => {
-  const HEALTH_CHECK_TIMEOUT = 5000 // 5 seconds
-
-  const checkServiceHealth = async (url: string) => {
-    const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), HEALTH_CHECK_TIMEOUT)
-
-    try {
-      const response = await fetch(`${url}/health`, {
-        signal: controller.signal,
-      })
-      clearTimeout(timeoutId)
-      return await response.json()
-    } catch (error) {
-      clearTimeout(timeoutId)
-      throw error
-    }
-  }
-
-  const serviceHealthChecks = await Promise.allSettled([
-    checkServiceHealth(SERVICE_URLS.AUTH_SERVICE),
-    checkServiceHealth(SERVICE_URLS.USER_SERVICE),
-    checkServiceHealth(SERVICE_URLS.COURSE_SERVICE),
-    checkServiceHealth(SERVICE_URLS.BOOKING_SERVICE),
-    checkServiceHealth(SERVICE_URLS.CHAT_SERVICE),
-    checkServiceHealth(SERVICE_URLS.RECOMMENDATION_SERVICE),
-  ])
-
-  const serviceNames = ['auth', 'user', 'course', 'booking', 'chat', 'recommendation']
-  const healthStatus: Record<string, any> = {}
-
-  serviceHealthChecks.forEach((result, index) => {
-    const serviceName = serviceNames[index]
-    if (result.status === 'fulfilled') {
-      healthStatus[serviceName] = {
-        status: 'healthy',
-        data: result.value,
-      }
-    } else {
-      const error = result.reason as Error
-      healthStatus[serviceName] = {
-        status: 'unhealthy',
-        error: error.name === 'AbortError' ? 'Health check timeout' : (error.message || 'Service unavailable'),
-      }
-    }
-  })
-
-  const allHealthy = serviceHealthChecks.every(result => result.status === 'fulfilled')
-
+// Service status endpoint
+app.get('/api/docs/status', async (c) => {
+  // TODO: Implement actual service health checks
   return c.json({
-    success: true,
-    overallStatus: allHealthy ? 'healthy' : 'degraded',
-    services: healthStatus,
-    timestamp: new Date().toISOString(),
-  }, allHealthy ? 200 : 503)
+    services: {
+      'api-gateway': { status: 'unknown', port: 3000 },
+      'auth-service': { status: 'unknown', port: 3001 },
+      'admin-service': { status: 'unknown', port: 3002 },
+      'course-service': { status: 'unknown', port: 3003 },
+      'booking-service': { status: 'unknown', port: 3004 },
+      'documentation-service': { status: 'healthy', port: 3007 }
+    },
+    timestamp: new Date().toISOString()
+  })
 })
 
-// ============================================
-// API ROUTES
-// ============================================
-app.route('/api', routes)
-
-// ============================================
-// 404 HANDLER
-// ============================================
+// 404 handler
 app.notFound((c) => {
   return c.json({
     success: false,
     error: {
-      code: 'ROUTE_NOT_FOUND',
-      message: 'The requested route does not exist',
-      path: c.req.path,
-      method: c.req.method,
-    },
+      code: 'NOT_FOUND',
+      message: 'Documentation endpoint not found'
+    }
   }, 404)
 })
 
-// ============================================
-// ERROR HANDLER
-// ============================================
+// Error handler
 app.onError((err, c) => {
-  console.error('Gateway error:', err)
-
-  // Check if it's a known error type
-  if (err.message.includes('ECONNREFUSED')) {
-    return c.json({
-      success: false,
-      error: {
-        code: 'SERVICE_UNAVAILABLE',
-        message: 'Unable to connect to backend service',
-        details: GATEWAY_CONFIG.NODE_ENV === 'development' ? err.message : undefined,
-      },
-    }, 503)
-  }
-
-  if (err.message.includes('timeout')) {
-    return c.json({
-      success: false,
-      error: {
-        code: 'REQUEST_TIMEOUT',
-        message: 'Request to service timed out',
-        details: GATEWAY_CONFIG.NODE_ENV === 'development' ? err.message : undefined,
-      },
-    }, 504)
-  }
-
+  console.error('Unhandled error:', err)
   return c.json({
     success: false,
     error: {
       code: 'INTERNAL_SERVER_ERROR',
       message: 'An unexpected error occurred',
-      details: GATEWAY_CONFIG.NODE_ENV === 'development' ? err.message : undefined,
-    },
+      details: process.env.NODE_ENV === 'development' ? err.message : undefined
+    }
   }, 500)
 })
 
-// ============================================
-// SERVER STARTUP
-// ============================================
-async function startServer() {
-  try {
-    console.log('🚀 Starting API Gateway...')
-    
-    // Connect to Redis
-    await connectRedis()
-    console.log('✅ Redis connected')
+// Start server
+const PORT = process.env.PORT || 3007
 
-    // Start server
-    const port = GATEWAY_CONFIG.PORT
-    console.log(`🌐 API Gateway running on port ${port}`)
-    console.log(`📡 Environment: ${GATEWAY_CONFIG.NODE_ENV}`)
-    console.log(`🔗 Services configured:`)
-    console.log(`   - Auth Service: ${SERVICE_URLS.AUTH_SERVICE}`)
-    console.log(`   - User Service: ${SERVICE_URLS.USER_SERVICE}`)
-    console.log(`   - Course Service: ${SERVICE_URLS.COURSE_SERVICE}`)
-    console.log(`   - Booking Service: ${SERVICE_URLS.BOOKING_SERVICE}`)
-    console.log(`   - Chat Service: ${SERVICE_URLS.CHAT_SERVICE}`)
-    console.log(`   - Recommendation Service: ${SERVICE_URLS.RECOMMENDATION_SERVICE}`)
-    console.log(`\n✨ API Gateway ready to accept requests!`)
+async function start() {
+  try {
+    // Connect to Redis
+    console.log('🔄 Connecting to Redis...')
+    await connectRedis()
+
+    console.log(`🚀 Documentation Service starting on port ${PORT}...`)
+    console.log(`📍 Health check: http://localhost:${PORT}/health`)
+    console.log(`📚 API Docs: http://localhost:${PORT}/api/docs`)
+    console.log(`📖 Swagger: http://localhost:${PORT}/api/docs/swagger`)
+    console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`)
 
   } catch (error) {
-    console.error('❌ Failed to start API Gateway:', error)
+    console.error('❌ Failed to start Documentation Service:', error)
     process.exit(1)
   }
 }
 
-// ============================================
-// GRACEFUL SHUTDOWN
-// ============================================
+// Graceful shutdown
 process.on('SIGINT', async () => {
-  console.log('\n⚠️  Received SIGINT, shutting down gracefully...')
+  console.log('\n🛑 Shutting down Documentation Service...')
   await disconnectRedis()
   process.exit(0)
 })
 
 process.on('SIGTERM', async () => {
-  console.log('\n⚠️  Received SIGTERM, shutting down gracefully...')
+  console.log('\n🛑 Shutting down Documentation Service...')
   await disconnectRedis()
   process.exit(0)
 })
 
-// Start the server
-startServer()
+// Start the service
+start()
 
 export default {
-  port: GATEWAY_CONFIG.PORT,
-  fetch: app.fetch,
+  port: PORT,
+  fetch: app.fetch
 }

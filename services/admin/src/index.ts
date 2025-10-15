@@ -1,17 +1,14 @@
 /**
- * Auth Service - Main Entry Point
- * Authentication & Authorization Microservice for Shema Music Backend
- * Port: 3001
+ * Admin Service - Main Entry Point
+ * Administrative operations for Shema Music Backend
+ * Port: 3002
  */
 
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { prettyJSON } from 'hono/pretty-json'
-import { connectRedis, disconnectRedis } from './config/redis'
-import { initializeFirebase } from './config/firebase'
-import authRoutes from './routes/authRoutes'
-import firebaseAuthRoutes from './routes/firebaseAuthRoutes'
+import { connectRedis, disconnectRedis } from '../../../shared/config/redis'
 
 const app = new Hono()
 
@@ -20,8 +17,8 @@ app.use('*', logger())
 app.use('*', prettyJSON())
 
 // CORS Configuration - Production Ready
-const corsOrigin = process.env.NODE_ENV === 'development' 
-  ? '*' 
+const corsOrigin = process.env.NODE_ENV === 'development'
+  ? '*'
   : (process.env.CORS_ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000'])
 
 app.use('*', cors({
@@ -35,17 +32,38 @@ app.use('*', cors({
 // Health check endpoint
 app.get('/health', (c) => {
   return c.json({
-    service: 'auth-service',
+    service: 'admin-service',
     status: 'healthy',
     timestamp: new Date().toISOString(),
     version: '1.0.0',
-    authMethods: ['jwt', 'firebase']
+    endpoints: ['users', 'analytics', 'system']
   })
 })
 
-// Mount auth routes
-app.route('/api/auth', authRoutes)
-app.route('/api/auth/firebase', firebaseAuthRoutes)
+// Admin routes - placeholder for now
+app.get('/api/admin/users', async (c) => {
+  return c.json({
+    success: true,
+    message: 'Admin users endpoint - Coming soon',
+    data: []
+  })
+})
+
+app.get('/api/admin/analytics', async (c) => {
+  return c.json({
+    success: true,
+    message: 'Admin analytics endpoint - Coming soon',
+    data: {}
+  })
+})
+
+app.get('/api/admin/system', async (c) => {
+  return c.json({
+    success: true,
+    message: 'Admin system endpoint - Coming soon',
+    data: {}
+  })
+})
 
 // 404 handler
 app.notFound((c) => {
@@ -72,39 +90,34 @@ app.onError((err, c) => {
 })
 
 // Start server
-const PORT = process.env.PORT || 3001
+const PORT = process.env.PORT || 3002
 
 async function start() {
   try {
-    // Initialize Firebase Admin SDK
-    console.log('🔥 Initializing Firebase Admin SDK...')
-    initializeFirebase()
-    
     // Connect to Redis
     console.log('🔄 Connecting to Redis...')
     await connectRedis()
-    
-    console.log(`🚀 Auth Service starting on port ${PORT}...`)
+
+    console.log(`🚀 Admin Service starting on port ${PORT}...`)
     console.log(`📍 Health check: http://localhost:${PORT}/health`)
-    console.log(`🔐 JWT Auth: http://localhost:${PORT}/api/auth/*`)
-    console.log(`🔥 Firebase Auth: http://localhost:${PORT}/api/auth/firebase/*`)
+    console.log(`� Admin API: http://localhost:${PORT}/api/admin/*`)
     console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`)
-    
+
   } catch (error) {
-    console.error('❌ Failed to start Auth Service:', error)
+    console.error('❌ Failed to start Admin Service:', error)
     process.exit(1)
   }
 }
 
 // Graceful shutdown
 process.on('SIGINT', async () => {
-  console.log('\n🛑 Shutting down Auth Service...')
+  console.log('\n🛑 Shutting down Admin Service...')
   await disconnectRedis()
   process.exit(0)
 })
 
 process.on('SIGTERM', async () => {
-  console.log('\n🛑 Shutting down Auth Service...')
+  console.log('\n🛑 Shutting down Admin Service...')
   await disconnectRedis()
   process.exit(0)
 })
