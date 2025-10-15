@@ -1,0 +1,36 @@
+{
+  "name": "@shema-music/admin-service",
+  "version": "1.0.0",
+  "description": "Admin Service for Shema Music Backend",
+  "main": "src/index.ts",
+  "type": "module",
+  "scripts": {
+    "dev": "bun --hot src/index.ts",
+    "start": "bun src/index.ts",
+    "build": "bun build src/index.ts --outdir dist --target bun",
+    "test": "bun test"
+  },
+  "keywords": [
+    "auth",
+    "jwt",
+    "microservice",
+    "hono"
+  ],
+  "author": "Shema Music Team",
+  "license": "MIT",
+  "dependencies": {
+    "@hono/node-server": "^1.12.0",
+    "@supabase/supabase-js": "^2.75.0",
+    "bcryptjs": "^2.4.3",
+    "firebase-admin": "^13.5.0",
+    "hono": "^4.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "redis": "^4.7.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/bcrypt": "^5.0.2",
+    "@types/jsonwebtoken": "^9.0.6",
+    "bun-types": "latest"
+  }
+}
