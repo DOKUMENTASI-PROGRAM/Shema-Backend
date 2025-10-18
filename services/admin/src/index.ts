@@ -9,6 +9,9 @@ import { cors } from 'hono/cors'
 import { logger } from 'hono/logger'
 import { prettyJSON } from 'hono/pretty-json'
 import { connectRedis, disconnectRedis } from '../../../shared/config/redis'
+import authRoutes from './routes/authRoutes'
+import firebaseAuthRoutes from './routes/firebaseAuthRoutes'
+import adminRoutes from './routes/adminRoutes'
 
 const app = new Hono()
 
@@ -40,30 +43,10 @@ app.get('/health', (c) => {
   })
 })
 
-// Admin routes - placeholder for now
-app.get('/api/admin/users', async (c) => {
-  return c.json({
-    success: true,
-    message: 'Admin users endpoint - Coming soon',
-    data: []
-  })
-})
-
-app.get('/api/admin/analytics', async (c) => {
-  return c.json({
-    success: true,
-    message: 'Admin analytics endpoint - Coming soon',
-    data: {}
-  })
-})
-
-app.get('/api/admin/system', async (c) => {
-  return c.json({
-    success: true,
-    message: 'Admin system endpoint - Coming soon',
-    data: {}
-  })
-})
+// Mount routes
+app.route('/api/auth', authRoutes)
+app.route('/api/auth/firebase', firebaseAuthRoutes)
+app.route('/api/admin', adminRoutes)
 
 // 404 handler
 app.notFound((c) => {

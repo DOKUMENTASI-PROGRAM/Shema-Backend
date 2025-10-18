@@ -247,3 +247,454 @@ export async function registerCourse(c: Context) {
     }, 500)
   }
 }
+
+/**
+ * GET /bookings - List all bookings (Admin only)
+ */
+export async function getBookings(c: Context) {
+  try {
+    const { data: bookings, error } = await supabase
+      .from('booking.bookings')
+      .select(`
+        *,
+        course:course_id (
+          id,
+          title,
+          instructor_name
+        )
+      `)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+
+    return c.json<APIResponse>({
+      success: true,
+      data: bookings
+    })
+  } catch (error) {
+    console.error('Error fetching bookings:', error)
+    return c.json<APIResponse>({
+      success: false,
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to fetch bookings'
+      }
+    }, 500)
+  }
+}
+
+/**
+ * POST /bookings - Create new booking
+ */
+export async function createBooking(c: Context) {
+  try {
+    const body = await c.req.json()
+    const userId = c.get('userId') // From auth middleware
+
+    const { data: booking, error } = await supabase
+      .from('booking.bookings')
+      .insert({
+        ...body,
+        user_id: userId,
+        status: 'pending'
+      })
+      .select()
+      .single()
+
+    if (error) throw error
+
+    return c.json<APIResponse>({
+      success: true,
+      data: booking
+    }, 201)
+  } catch (error) {
+    console.error('Error creating booking:', error)
+    return c.json<APIResponse>({
+      success: false,
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to create booking'
+      }
+    }, 500)
+  }
+}
+
+/**
+ * GET /bookings/:id - Get booking by ID
+ */
+export async function getBookingById(c: Context) {
+  try {
+    const bookingId = c.req.param('id')
+    const userId = c.get('userId')
+    const userRole = c.get('userRole')
+
+    let query = supabase
+      .from('booking.bookings')
+      .select(`
+        *,
+        course:course_id (
+          id,
+          title,
+          instructor_name
+        )
+      `)
+      .eq('id', bookingId)
+
+    // Users can only see their own bookings unless they're admin
+    if (userRole !== 'admin') {
+      query = query.eq('user_id', userId)
+    }
+
+    const { data: booking, error } = await query.single()
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return c.json<APIResponse>({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Booking not found'
+          }
+        }, 404)
+      }
+      throw error
+    }
+
+    return c.json<APIResponse>({
+      success: true,
+      data: booking
+    })
+  } catch (error) {
+    console.error('Error fetching booking:', error)
+    return c.json<APIResponse>({
+      success: false,
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to fetch booking'
+      }
+    }, 500)
+  }
+}
+
+/**
+ * PUT /bookings/:id - Update booking
+ */
+export async function updateBooking(c: Context) {
+  try {
+    const bookingId = c.req.param('id')
+    const body = await c.req.json()
+    const userId = c.get('userId')
+    const userRole = c.get('userRole')
+
+    // Check if booking exists and user has permission
+    const { data: existingBooking, error: fetchError } = await supabase
+      .from('booking.bookings')
+      .select('user_id')
+      .eq('id', bookingId)
+      .single()
+
+    if (fetchError) {
+      if (fetchError.code === 'PGRST116') {
+        return c.json<APIResponse>({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Booking not found'
+          }
+        }, 404)
+      }
+      throw fetchError
+    }
+
+    // Users can only update their own bookings unless they're admin
+    if (userRole !== 'admin' && existingBooking.user_id !== userId) {
+      return c.json<APIResponse>({
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'You can only update your own bookings'
+        }
+      }, 403)
+    }
+
+    const { data: booking, error } = await supabase
+      .from('booking.bookings')
+      .update(body)
+      .eq('id', bookingId)
+      .select()
+      .single()
+
+    if (error) throw error
+
+    return c.json<APIResponse>({
+      success: true,
+      data: booking
+    })
+  } catch (error) {
+    console.error('Error updating booking:', error)
+    return c.json<APIResponse>({
+      success: false,
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to update booking'
+      }
+    }, 500)
+  }
+}
+
+/**
+ * DELETE /bookings/:id - Delete booking
+ */
+export async function deleteBooking(c: Context) {
+  try {
+    const bookingId = c.req.param('id')
+    const userId = c.get('userId')
+    const userRole = c.get('userRole')
+
+    // Check if booking exists and user has permission
+    const { data: existingBooking, error: fetchError } = await supabase
+      .from('booking.bookings')
+      .select('user_id, status')
+      .eq('id', bookingId)
+      .single()
+
+    if (fetchError) {
+      if (fetchError.code === 'PGRST116') {
+        return c.json<APIResponse>({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Booking not found'
+          }
+        }, 404)
+      }
+      throw fetchError
+    }
+
+    // Users can only delete their own bookings unless they're admin
+    if (userRole !== 'admin' && existingBooking.user_id !== userId) {
+      return c.json<APIResponse>({
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'You can only delete your own bookings'
+        }
+      }, 403)
+    }
+
+    // Only allow deletion of pending bookings
+    if (existingBooking.status !== 'pending') {
+      return c.json<APIResponse>({
+        success: false,
+        error: {
+          code: 'BAD_REQUEST',
+          message: 'Only pending bookings can be deleted'
+        }
+      }, 400)
+    }
+
+    const { error } = await supabase
+      .from('booking.bookings')
+      .delete()
+      .eq('id', bookingId)
+
+    if (error) throw error
+
+    return c.json<APIResponse>({
+      success: true,
+      data: { message: 'Booking deleted successfully' }
+    })
+  } catch (error) {
+    console.error('Error deleting booking:', error)
+    return c.json<APIResponse>({
+      success: false,
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to delete booking'
+      }
+    }, 500)
+  }
+}
+
+/**
+ * GET /user/:userId - Get user bookings
+ */
+export async function getUserBookings(c: Context) {
+  try {
+    const userId = c.req.param('userId')
+    const currentUserId = c.get('userId')
+    const userRole = c.get('userRole')
+
+    // Users can only see their own bookings unless they're admin
+    if (userRole !== 'admin' && userId !== currentUserId) {
+      return c.json<APIResponse>({
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'You can only view your own bookings'
+        }
+      }, 403)
+    }
+
+    const { data: bookings, error } = await supabase
+      .from('booking.bookings')
+      .select(`
+        *,
+        course:course_id (
+          id,
+          title,
+          instructor_name
+        )
+      `)
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+
+    if (error) throw error
+
+    return c.json<APIResponse>({
+      success: true,
+      data: bookings
+    })
+  } catch (error) {
+    console.error('Error fetching user bookings:', error)
+    return c.json<APIResponse>({
+      success: false,
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to fetch user bookings'
+      }
+    }, 500)
+  }
+}
+
+/**
+ * POST /:id/confirm - Confirm booking (Admin only)
+ */
+export async function confirmBooking(c: Context) {
+  try {
+    const bookingId = c.req.param('id')
+
+    const { data: booking, error } = await supabase
+      .from('booking.bookings')
+      .update({
+        status: 'confirmed',
+        confirmed_at: new Date().toISOString()
+      })
+      .eq('id', bookingId)
+      .eq('status', 'pending') // Only confirm pending bookings
+      .select()
+      .single()
+
+    if (error) {
+      if (error.code === 'PGRST116') {
+        return c.json<APIResponse>({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Booking not found or already processed'
+          }
+        }, 404)
+      }
+      throw error
+    }
+
+    return c.json<APIResponse>({
+      success: true,
+      data: {
+        booking,
+        message: 'Booking confirmed successfully'
+      }
+    })
+  } catch (error) {
+    console.error('Error confirming booking:', error)
+    return c.json<APIResponse>({
+      success: false,
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to confirm booking'
+      }
+    }, 500)
+  }
+}
+
+/**
+ * POST /:id/cancel - Cancel booking
+ */
+export async function cancelBooking(c: Context) {
+  try {
+    const bookingId = c.req.param('id')
+    const userId = c.get('userId')
+    const userRole = c.get('userRole')
+
+    // Check if booking exists and user has permission
+    const { data: existingBooking, error: fetchError } = await supabase
+      .from('booking.bookings')
+      .select('user_id, status')
+      .eq('id', bookingId)
+      .single()
+
+    if (fetchError) {
+      if (fetchError.code === 'PGRST116') {
+        return c.json<APIResponse>({
+          success: false,
+          error: {
+            code: 'NOT_FOUND',
+            message: 'Booking not found'
+          }
+        }, 404)
+      }
+      throw fetchError
+    }
+
+    // Users can only cancel their own bookings unless they're admin
+    if (userRole !== 'admin' && existingBooking.user_id !== userId) {
+      return c.json<APIResponse>({
+        success: false,
+        error: {
+          code: 'FORBIDDEN',
+          message: 'You can only cancel your own bookings'
+        }
+      }, 403)
+    }
+
+    // Only allow cancellation of pending or confirmed bookings
+    if (!['pending', 'confirmed'].includes(existingBooking.status)) {
+      return c.json<APIResponse>({
+        success: false,
+        error: {
+          code: 'BAD_REQUEST',
+          message: 'Booking cannot be cancelled at this stage'
+        }
+      }, 400)
+    }
+
+    const { data: booking, error } = await supabase
+      .from('booking.bookings')
+      .update({
+        status: 'cancelled',
+        cancelled_at: new Date().toISOString()
+      })
+      .eq('id', bookingId)
+      .select()
+      .single()
+
+    if (error) throw error
+
+    return c.json<APIResponse>({
+      success: true,
+      data: {
+        booking,
+        message: 'Booking cancelled successfully'
+      }
+    })
+  } catch (error) {
+    console.error('Error cancelling booking:', error)
+    return c.json<APIResponse>({
+      success: false,
+      error: {
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to cancel booking'
+      }
+    }, 500)
+  }
+}

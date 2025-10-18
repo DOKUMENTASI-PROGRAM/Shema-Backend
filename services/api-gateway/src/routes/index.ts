@@ -70,41 +70,6 @@ routes.get('/auth/firebase/verify/:token', async (c) => {
 })
 
 // ============================================
-// USER SERVICE ROUTES (Protected)
-// ============================================
-routes.get('/users/me', authMiddleware, async (c) => {
-  return proxyToService(c, {
-    serviceUrl: SERVICE_URLS.USER_SERVICE,
-    path: '/api/users/me',
-  })
-})
-
-routes.get('/users/:id', authMiddleware, async (c) => {
-  const userId = c.req.param('id')
-  return proxyToService(c, {
-    serviceUrl: SERVICE_URLS.USER_SERVICE,
-    path: `/api/users/${userId}`,
-  })
-})
-
-routes.put('/users/:id', authMiddleware, async (c) => {
-  const userId = c.req.param('id')
-  return proxyToService(c, {
-    serviceUrl: SERVICE_URLS.USER_SERVICE,
-    path: `/api/users/${userId}`,
-  })
-})
-
-routes.get('/users', authMiddleware, requireRole(['admin']), async (c) => {
-  const query = c.req.query()
-  const queryString = new URLSearchParams(query).toString()
-  return proxyToService(c, {
-    serviceUrl: SERVICE_URLS.USER_SERVICE,
-    path: `/api/users${queryString ? '?' + queryString : ''}`,
-  })
-})
-
-// ============================================
 // COURSE SERVICE ROUTES
 // ============================================
 routes.get('/courses', async (c) => {
@@ -199,52 +164,6 @@ routes.post('/bookings/:id/reject', authMiddleware, requireRole(['admin']), asyn
 })
 
 // ============================================
-// CHAT SERVICE ROUTES (Protected)
-// ============================================
-routes.get('/chat/sessions', authMiddleware, async (c) => {
-  return proxyToService(c, {
-    serviceUrl: SERVICE_URLS.CHAT_SERVICE,
-    path: '/api/chat/sessions',
-  })
-})
-
-routes.get('/chat/sessions/:id', authMiddleware, async (c) => {
-  const sessionId = c.req.param('id')
-  return proxyToService(c, {
-    serviceUrl: SERVICE_URLS.CHAT_SERVICE,
-    path: `/api/chat/sessions/${sessionId}`,
-  })
-})
-
-routes.get('/chat/active-sessions', authMiddleware, requireRole(['admin']), async (c) => {
-  return proxyToService(c, {
-    serviceUrl: SERVICE_URLS.CHAT_SERVICE,
-    path: '/api/chat/active-sessions',
-  })
-})
-
-// WebSocket connection for chat (handled by Chat Service directly)
-// routes.get('/chat/connect', ...) // WebSocket upgrade handled at service level
-
-// ============================================
-// RECOMMENDATION SERVICE ROUTES (Protected)
-// ============================================
-routes.post('/recommendations/generate', authMiddleware, async (c) => {
-  return proxyToService(c, {
-    serviceUrl: SERVICE_URLS.RECOMMENDATION_SERVICE,
-    path: '/api/recommendations/generate',
-  })
-})
-
-routes.get('/recommendations/user/:userId', authMiddleware, async (c) => {
-  const userId = c.req.param('userId')
-  return proxyToService(c, {
-    serviceUrl: SERVICE_URLS.RECOMMENDATION_SERVICE,
-    path: `/api/recommendations/user/${userId}`,
-  })
-})
-
-// ============================================
 // AGGREGATION ENDPOINTS
 // ============================================
 routes.get('/dashboard/stats', authMiddleware, requireRole(['admin']), async (c) => {
@@ -267,6 +186,24 @@ routes.post('/booking/register-course', async (c) => {
   return proxyToService(c, {
     serviceUrl: SERVICE_URLS.BOOKING_SERVICE,
     path: '/api/booking/register-course',
+  })
+})
+
+// ============================================
+// RECOMMENDATION SERVICE ROUTES (Session-based)
+// ============================================
+routes.post('/assessment', async (c) => {
+  return proxyToService(c, {
+    serviceUrl: SERVICE_URLS.RECOMMENDATION_SERVICE,
+    path: '/api/assessment',
+  })
+})
+
+routes.get('/results/:sessionId', async (c) => {
+  const sessionId = c.req.param('sessionId')
+  return proxyToService(c, {
+    serviceUrl: SERVICE_URLS.RECOMMENDATION_SERVICE,
+    path: `/api/results/${sessionId}`,
   })
 })
 

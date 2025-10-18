@@ -39,7 +39,7 @@ services:
       - ADMIN_SERVICE_URL=http://admin-service:3002
       - COURSE_SERVICE_URL=http://course-service:3003
       - BOOKING_SERVICE_URL=http://booking-service:3004
-      # RECOMMENDATION_SERVICE not implemented yet
+      - RECOMMENDATION_SERVICE_URL=http://recommendation-service:3005
       - JWT_SECRET=${JWT_SECRET}
       - SERVICE_JWT_SECRET=${SERVICE_JWT_SECRET}
       - CORS_ORIGIN=${CORS_ORIGIN:-*}
@@ -223,13 +223,47 @@ services:
     restart: unless-stopped
 
   # ============================================
-  # SUPABASE LOCAL - Port 54330 (changed to avoid conflict with Supabase CLI)
+  # RECOMMENDATION SERVICE - Port 3005
+  # ============================================
+  recommendation-service:
+    build:
+      context: ./services/recommendation
+      dockerfile: Dockerfile
+    container_name: shema-recommendation-service
+    ports:
+      - "3005:3005"
+    environment:
+      - PORT=3005
+      - NODE_ENV=${NODE_ENV:-development}
+      - SERVICE_NAME=recommendation-service
+      - REDIS_URL=${REDIS_URL}
+      - SERVICE_JWT_SECRET=${SERVICE_JWT_SECRET}
+      # Supabase configuration
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+      # Google AI configuration
+      - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY}
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - shema-network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  # ============================================
+  # SUPABASE LOCAL - Port 15432 (PostgreSQL default alternative)
   # ============================================
   supabase:
     image: supabase/postgres:15.1.0.147
     container_name: shema-supabase
     ports:
-      - "54330:5432"
+      - "15432:5432"
     environment:
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DB=postgres

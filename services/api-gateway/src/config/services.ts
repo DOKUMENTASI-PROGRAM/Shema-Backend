@@ -5,11 +5,11 @@
 
 export const SERVICE_URLS = {
   AUTH_SERVICE: process.env.AUTH_SERVICE_URL || 'http://auth-service:3001',
-  USER_SERVICE: process.env.USER_SERVICE_URL || 'http://user-service:3002',
+  USER_SERVICE: process.env.USER_SERVICE_URL,
   COURSE_SERVICE: process.env.COURSE_SERVICE_URL || 'http://course-service:3003',
   BOOKING_SERVICE: process.env.BOOKING_SERVICE_URL || 'http://booking-service:3004',
-  CHAT_SERVICE: process.env.CHAT_SERVICE_URL || 'http://chat-service:3005',
-  RECOMMENDATION_SERVICE: process.env.RECOMMENDATION_SERVICE_URL || 'http://recommendation-service:3006',
+  CHAT_SERVICE: process.env.CHAT_SERVICE_URL,
+  RECOMMENDATION_SERVICE: process.env.RECOMMENDATION_SERVICE_URL || 'http://recommendation-service:3005',
 }
 
 export const SERVICE_TIMEOUT = parseInt(process.env.SERVICE_TIMEOUT || '30000', 10) // 30 seconds default

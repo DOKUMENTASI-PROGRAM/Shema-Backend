@@ -42,7 +42,7 @@ app.get('/health', (c) => {
 })
 
 // Mount course routes
-app.route('/api/courses', courseRoutes)
+app.route('/api/course', courseRoutes)
 
 // 404 handler
 app.notFound((c) => {
