@@ -1,6 +1,6 @@
 # API Testing Report
   
-**Generated:** 18/10/2025, 14.23.46  
+**Generated:** 18/10/2025, 16.09.11  
 **Base URL:** http://localhost:3000  
 **Total Tests:** 17  
 **Passed:** ✅ 10  
@@ -57,7 +57,7 @@
 **Request:**
 - Method: `GET`
 - Endpoint: `/health`
-- Duration: 139ms
+- Duration: 58ms
 
 **Response:**
 - Status: `200 OK`
@@ -67,9 +67,9 @@
 {
   "service": "api-gateway",
   "status": "healthy",
-  "timestamp": "2025-10-18T07:23:43.154Z",
+  "timestamp": "2025-10-18T09:09:09.119Z",
   "version": "1.0.0",
-  "uptime": 3921.623860148,
+  "uptime": 662.680034225,
   "environment": "production"
 }
 ```
@@ -81,7 +81,7 @@
 **Request:**
 - Method: `GET`
 - Endpoint: `/services`
-- Duration: 18ms
+- Duration: 6ms
 
 **Response:**
 - Status: `200 OK`
@@ -112,7 +112,7 @@
 **Request:**
 - Method: `GET`
 - Endpoint: `/services/health`
-- Duration: 18ms
+- Duration: 10ms
 
 **Response:**
 - Status: `503 Service Unavailable`
@@ -128,7 +128,7 @@
       "data": {
         "service": "auth-service",
         "status": "healthy",
-        "timestamp": "2025-10-18T07:23:43.207Z",
+        "timestamp": "2025-10-18T09:09:09.140Z",
         "version": "1.0.0",
         "authMethods": [
           "jwt",
@@ -145,7 +145,7 @@
       "data": {
         "service": "course-service",
         "status": "healthy",
-        "timestamp": "2025-10-18T07:23:43.199Z",
+        "timestamp": "2025-10-18T09:09:09.140Z",
         "version": "1.0.0",
         "endpoints": [
           "courses",
@@ -160,7 +160,7 @@
         "status": "healthy",
         "service": "booking-service",
         "environment": "production",
-        "timestamp": "2025-10-18T07:23:43.199Z"
+        "timestamp": "2025-10-18T09:09:09.140Z"
       }
     },
     "chat"
@@ -176,7 +176,7 @@
 **Request:**
 - Method: `POST`
 - Endpoint: `/api/auth/login`
-- Duration: 1361ms
+- Duration: 1079ms
 
 **Request Body:**
 ```json
@@ -207,7 +207,7 @@
 **Request:**
 - Method: `POST`
 - Endpoint: `/api/auth/login`
-- Duration: 816ms
+- Duration: 271ms
 
 **Request Body:**
 ```json
@@ -225,8 +225,8 @@
 {
   "success": true,
   "data": {
-    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OGU3NzQwMC1mOTUyLTQyNjUtYTc4OS00MWQ5ZjdiYzgyZGIiLCJlbWFpbCI6ImFkbWluQHNoZW1hbXVzaWMuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzYwNzcyMjI1LCJleHAiOjE3NjA3NzMxMjUsImF1ZCI6InNoZW1hLW11c2ljLWFwaSIsImlzcyI6InNoZW1hLW11c2ljLWF1dGgifQ.DHhdtK0zmwfLQyeYP22YAPyrn7zAOOe_4awwT9br9rs",
-    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OGU3NzQwMC1mOTUyLTQyNjUtYTc4OS00MWQ5ZjdiYzgyZGIiLCJlbWFpbCI6ImFkbWluQHNoZW1hbXVzaWMuY29tIiwiaWF0IjoxNzYwNzcyMjI1LCJleHAiOjE3NjEzNzcwMjUsImF1ZCI6InNoZW1hLW11c2ljLWFwaSIsImlzcyI6InNoZW1hLW11c2ljLWF1dGgifQ.JqJ34Al0tXchdpOl4xkS4AobZphasyIcsbZDH9LzN38",
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OGU3NzQwMC1mOTUyLTQyNjUtYTc4OS00MWQ5ZjdiYzgyZGIiLCJlbWFpbCI6ImFkbWluQHNoZW1hbXVzaWMuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzYwNzc4NTUwLCJleHAiOjE3NjA3Nzk0NTAsImF1ZCI6InNoZW1hLW11c2ljLWFwaSIsImlzcyI6InNoZW1hLW11c2ljLWF1dGgifQ.wEB3B6C3DgSHrA0nShAR06KPsYItVtZ6iRnROInCHpY",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OGU3NzQwMC1mOTUyLTQyNjUtYTc4OS00MWQ5ZjdiYzgyZGIiLCJlbWFpbCI6ImFkbWluQHNoZW1hbXVzaWMuY29tIiwiaWF0IjoxNzYwNzc4NTUwLCJleHAiOjE3NjEzODMzNTAsImF1ZCI6InNoZW1hLW11c2ljLWFwaSIsImlzcyI6InNoZW1hLW11c2ljLWF1dGgifQ.0q-m7ITZV0MhhUIVFiElIcE_oAXkROtxt6qZwnc9jWU",
     "user": {
       "id": "88e77400-f952-4265-a789-41d9f7bc82db",
       "email": "admin@shemamusic.com",
@@ -234,7 +234,7 @@
       "role": "admin",
       "phone_number": null,
       "created_at": "2025-10-18T07:22:21.611+00:00",
-      "updated_at": "2025-10-18T07:22:21.580169+00
+      "updated_at": "2025-10-18T09:05:35.57787+00:
 ... (truncated)
 ```
 
@@ -245,7 +245,7 @@
 **Request:**
 - Method: `POST`
 - Endpoint: `/api/auth/logout`
-- Duration: 611ms
+- Duration: 610ms
 
 **Response:**
 - Status: `500 Internal Server Error`
@@ -270,7 +270,7 @@
 **Request:**
 - Method: `GET`
 - Endpoint: `/api/users`
-- Duration: 2ms
+- Duration: 3ms
 
 **Response:**
 - Status: `404 Not Found`
@@ -322,7 +322,7 @@
 **Request:**
 - Method: `GET`
 - Endpoint: `/api/courses`
-- Duration: 3ms
+- Duration: 4ms
 
 **Response:**
 - Status: `200 OK`
@@ -343,7 +343,7 @@
 **Request:**
 - Method: `GET`
 - Endpoint: `/api/courses`
-- Duration: 6ms
+- Duration: 5ms
 
 **Response:**
 - Status: `200 OK`
@@ -364,7 +364,7 @@
 **Request:**
 - Method: `POST`
 - Endpoint: `/api/courses`
-- Duration: 34ms
+- Duration: 5ms
 
 **Request Body:**
 ```json
@@ -398,7 +398,7 @@
 **Request:**
 - Method: `GET`
 - Endpoint: `/api/courses/undefined`
-- Duration: 4ms
+- Duration: 3ms
 
 **Response:**
 - Status: `200 OK`
@@ -421,7 +421,7 @@
 **Request:**
 - Method: `PUT`
 - Endpoint: `/api/courses/undefined`
-- Duration: 6ms
+- Duration: 4ms
 
 **Request Body:**
 ```json
@@ -454,7 +454,7 @@
 **Request:**
 - Method: `GET`
 - Endpoint: `/api/bookings/pending`
-- Duration: 611ms
+- Duration: 613ms
 
 **Response:**
 - Status: `404 Not Found`
@@ -479,7 +479,7 @@
 **Request:**
 - Method: `POST`
 - Endpoint: `/api/cs/sessions`
-- Duration: 1ms
+- Duration: 3ms
 
 **Request Body:**
 ```json
@@ -514,7 +514,7 @@
 **Request:**
 - Method: `GET`
 - Endpoint: `/api/dashboard/stats`
-- Duration: 12ms
+- Duration: 4ms
 
 **Response:**
 - Status: `200 OK`
@@ -545,7 +545,7 @@
 **Request:**
 - Method: `GET`
 - Endpoint: `/api/dashboard/admin`
-- Duration: 5ms
+- Duration: 3ms
 
 **Response:**
 - Status: `200 OK`
@@ -576,7 +576,7 @@
 
 ```json
 {
-  "timestamp": "2025-10-18T07:23:43.009Z",
+  "timestamp": "2025-10-18T09:09:09.062Z",
   "baseUrl": "http://localhost:3000",
   "summary": {
     "total": 17,
@@ -598,16 +598,16 @@
         "data": {
           "service": "api-gateway",
           "status": "healthy",
-          "timestamp": "2025-10-18T07:23:43.154Z",
+          "timestamp": "2025-10-18T09:09:09.119Z",
           "version": "1.0.0",
-          "uptime": 3921.623860148,
+          "uptime": 662.680034225,
           "environment": "production"
         },
         "error": null
       },
-      "duration": "139ms",
+      "duration": "58ms",
       "passed": true,
-      "timestamp": "2025-10-18T07:23:43.174Z"
+      "timestamp": "2025-10-18T09:09:09.127Z"
     },
     {
       "name": "Health Check: Services Discovery",
@@ -637,9 +637,9 @@
         },
         "error": null
       },
-      "duration": "18ms",
+      "duration": "6ms",
       "passed": true,
-      "timestamp": "2025-10-18T07:23:43.194Z"
+      "timestamp": "2025-10-18T09:09:09.134Z"
     },
     {
       "name": "Health Check: All Services Health",
@@ -661,7 +661,7 @@
               "data": {
                 "service": "auth-service",
                 "status": "healthy",
-                "timestamp": "2025-10-18T07:23:43.207Z",
+                "timestamp": "2025-10-18T09:09:09.140Z",
                 "version": "1.0.0",
                 "authMethods": [
                   "jwt",
@@ -678,7 +678,7 @@
               "data": {
                 "service": "course-service",
                 "status": "healthy",
-                "timestamp": "2025-10-18T07:23:43.199Z",
+                "timestamp": "2025-10-18T09:09:09.140Z",
                 "version": "1.0.0",
                 "endpoints": [
                   "courses",
@@ -693,7 +693,7 @@
                 "status": "healthy",
                 "service": "booking-service",
                 "environment": "production",
-                "timestamp": "2025-10-18T07:23:43.199Z"
+                "timestamp": "2025-10-18T09:09:09.140Z"
               }
             },
             "chat": {
@@ -705,7 +705,7 @@
               "data": {
                 "service": "recommendation-service",
                 "status": "healthy",
-                "timestamp": "2025-10-18T07:23:43.200Z",
+                "timestamp": "2025-10-18T09:09:09.143Z",
                 "version": "1.0.0",
                 "features": [
                   "assessment",
@@ -714,13 +714,13 @@
               }
             }
           },
-          "timestamp": "2025-10-18T07:23:43.209Z"
+          "timestamp": "2025-10-18T09:09:09.144Z"
         },
         "error": null
       },
-      "duration": "18ms",
+      "duration": "10ms",
       "passed": false,
-      "timestamp": "2025-10-18T07:23:43.212Z"
+      "timestamp": "2025-10-18T09:09:09.145Z"
     },
     {
       "name": "Auth: User Login (POST) - Expected to fail (only admins)",
@@ -745,9 +745,9 @@
         },
         "error": null
       },
-      "duration": "1361ms",
+      "duration": "1079ms",
       "passed": true,
-      "timestamp": "2025-10-18T07:23:44.574Z"
+      "timestamp": "2025-10-18T09:09:10.224Z"
     },
     {
       "name": "Auth: Admin Login (POST)",
@@ -766,8 +766,8 @@
         "data": {
           "success": true,
           "data": {
-            "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OGU3NzQwMC1mOTUyLTQyNjUtYTc4OS00MWQ5ZjdiYzgyZGIiLCJlbWFpbCI6ImFkbWluQHNoZW1hbXVzaWMuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzYwNzcyMjI1LCJleHAiOjE3NjA3NzMxMjUsImF1ZCI6InNoZW1hLW11c2ljLWFwaSIsImlzcyI6InNoZW1hLW11c2ljLWF1dGgifQ.DHhdtK0zmwfLQyeYP22YAPyrn7zAOOe_4awwT9br9rs",
-            "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OGU3NzQwMC1mOTUyLTQyNjUtYTc4OS00MWQ5ZjdiYzgyZGIiLCJlbWFpbCI6ImFkbWluQHNoZW1hbXVzaWMuY29tIiwiaWF0IjoxNzYwNzcyMjI1LCJleHAiOjE3NjEzNzcwMjUsImF1ZCI6InNoZW1hLW11c2ljLWFwaSIsImlzcyI6InNoZW1hLW11c2ljLWF1dGgifQ.JqJ34Al0tXchdpOl4xkS4AobZphasyIcsbZDH9LzN38",
+            "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OGU3NzQwMC1mOTUyLTQyNjUtYTc4OS00MWQ5ZjdiYzgyZGIiLCJlbWFpbCI6ImFkbWluQHNoZW1hbXVzaWMuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzYwNzc4NTUwLCJleHAiOjE3NjA3Nzk0NTAsImF1ZCI6InNoZW1hLW11c2ljLWFwaSIsImlzcyI6InNoZW1hLW11c2ljLWF1dGgifQ.wEB3B6C3DgSHrA0nShAR06KPsYItVtZ6iRnROInCHpY",
+            "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OGU3NzQwMC1mOTUyLTQyNjUtYTc4OS00MWQ5ZjdiYzgyZGIiLCJlbWFpbCI6ImFkbWluQHNoZW1hbXVzaWMuY29tIiwiaWF0IjoxNzYwNzc4NTUwLCJleHAiOjE3NjEzODMzNTAsImF1ZCI6InNoZW1hLW11c2ljLWFwaSIsImlzcyI6InNoZW1hLW11c2ljLWF1dGgifQ.0q-m7ITZV0MhhUIVFiElIcE_oAXkROtxt6qZwnc9jWU",
             "user": {
               "id": "88e77400-f952-4265-a789-41d9f7bc82db",
               "email": "admin@shemamusic.com",
@@ -775,19 +775,19 @@
               "role": "admin",
               "phone_number": null,
               "created_at": "2025-10-18T07:22:21.611+00:00",
-              "updated_at": "2025-10-18T07:22:21.580169+00:00",
-              "last_login_at": "2025-10-18T07:23:45.388Z"
+              "updated_at": "2025-10-18T09:05:35.57787+00:00",
+              "last_login_at": "2025-10-18T09:09:10.495Z"
             }
           },
           "meta": {
-            "timestamp": "2025-10-18T07:23:45.388Z"
+            "timestamp": "2025-10-18T09:09:10.495Z"
           }
         },
         "error": null
       },
-      "duration": "816ms",
+      "duration": "271ms",
       "passed": true,
-      "timestamp": "2025-10-18T07:23:45.390Z"
+      "timestamp": "2025-10-18T09:09:10.496Z"
     },
     {
       "name": "User: Get All Users - Admin (GET)",
@@ -795,7 +795,7 @@
       "endpoint": "/api/users",
       "request": {
         "headers": {
-          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OGU3NzQwMC1mOTUyLTQyNjUtYTc4OS00MWQ5ZjdiYzgyZGIiLCJlbWFpbCI6ImFkbWluQHNoZW1hbXVzaWMuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzYwNzcyMjI1LCJleHAiOjE3NjA3NzMxMjUsImF1ZCI6InNoZW1hLW11c2ljLWFwaSIsImlzcyI6InNoZW1hLW11c2ljLWF1dGgifQ.DHhdtK0zmwfLQyeYP22YAPyrn7zAOOe_4awwT9br9rs"
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OGU3NzQwMC1mOTUyLTQyNjUtYTc4OS00MWQ5ZjdiYzgyZGIiLCJlbWFpbCI6ImFkbWluQHNoZW1hbXVzaWMuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzYwNzc4NTUwLCJleHAiOjE3NjA3Nzk0NTAsImF1ZCI6InNoZW1hLW11c2ljLWFwaSIsImlzcyI6InNoZW1hLW11c2ljLWF1dGgifQ.wEB3B6C3DgSHrA0nShAR06KPsYItVtZ6iRnROInCHpY"
         },
         "body": null
       },
@@ -813,9 +813,9 @@
         },
         "error": null
       },
-      "duration": "2ms",
+      "duration": "3ms",
       "passed": false,
-      "timestamp": "2025-10-18T07:23:45.393Z"
+      "timestamp": "2025-10-18T09:09:10.500Z"
     },
     {
       "name": "User: Get User Stats - Admin (GET)",
@@ -823,7 +823,7 @@
       "endpoint": "/api/users/stats",
       "request": {
         "headers": {
-          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OGU3NzQwMC1mOTUyLTQyNjUtYTc4OS00MWQ5ZjdiYzgyZGIiLCJlbWFpbCI6ImFkbWluQHNoZW1hbXVzaWMuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzYwNzcyMjI1LCJleHAiOjE3NjA3NzMxMjUsImF1ZCI6InNoZW1hLW11c2ljLWFwaSIsImlzcyI6InNoZW1hLW11c2ljLWF1dGgifQ.DHhdtK0zmwfLQyeYP22YAPyrn7zAOOe_4awwT9br9rs"
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OGU3NzQwMC1mOTUyLTQyNjUtYTc4OS00MWQ5ZjdiYzgyZGIiLCJlbWFpbCI6ImFkbWluQHNoZW1hbXVzaWMuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzYwNzc4NTUwLCJleHAiOjE3NjA3Nzk0NTAsImF1ZCI6InNoZW1hLW11c2ljLWFwaSIsImlzcyI6InNoZW1hLW11c2ljLWF1dGgifQ.wEB3B6C3DgSHrA0nShAR06KPsYItVtZ6iRnROInCHpY"
         },
         "body": null
       },
@@ -843,7 +843,7 @@
       },
       "duration": "2ms",
       "passed": false,
-      "timestamp": "2025-10-18T07:23:45.396Z"
+      "timestamp": "2025-10-18T09:09:10.503Z"
     },
     {
       "name": "Course: Get All Courses - Public (GET)",
@@ -863,9 +863,9 @@
         },
         "error": null
       },
-      "duration": "3ms",
+      "duration": "4ms",
       "passed": true,
-      "timestamp": "2025-10-18T07:23:45.399Z"
+      "timestamp": "2025-10-18T09:09:10.507Z"
     },
     {
       "name": "Course: Get All Courses - Admin (GET)",
@@ -873,7 +873,7 @@
       "endpoint": "/api/courses",
       "request": {
         "headers": {
-          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OGU3NzQwMC1mOTUyLTQyNjUtYTc4OS00MWQ5ZjdiYzgyZGIiLCJlbWFpbCI6ImFkbWluQHNoZW1hbXVzaWMuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzYwNzcyMjI1LCJleHAiOjE3NjA3NzMxMjUsImF1ZCI6InNoZW1hLW11c2ljLWFwaSIsImlzcyI6InNoZW1hLW11c2ljLWF1dGgifQ.DHhdtK0zmwfLQyeYP22YAPyrn7zAOOe_4awwT9br9rs"
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OGU3NzQwMC1mOTUyLTQyNjUtYTc4OS00MWQ5ZjdiYzgyZGIiLCJlbWFpbCI6ImFkbWluQHNoZW1hbXVzaWMuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzYwNzc4NTUwLCJleHAiOjE3NjA3Nzk0NTAsImF1ZCI6InNoZW1hLW11c2ljLWFwaSIsImlzcyI6InNoZW1hLW11c2ljLWF1dGgifQ.wEB3B6C3DgSHrA0nShAR06KPsYItVtZ6iRnROInCHpY"
         },
         "body": null
       },
@@ -887,9 +887,9 @@
         },
         "error": null
       },
-      "duration": "6ms",
+      "duration": "5ms",
       "passed": true,
-      "timestamp": "2025-10-18T07:23:45.406Z"
+      "timestamp": "2025-10-18T09:09:10.512Z"
     },
     {
       "name": "Course: Create New Course - Admin (POST)",
@@ -897,7 +897,7 @@
       "endpoint": "/api/courses",
       "request": {
         "headers": {
-          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OGU3NzQwMC1mOTUyLTQyNjUtYTc4OS00MWQ5ZjdiYzgyZGIiLCJlbWFpbCI6ImFkbWluQHNoZW1hbXVzaWMuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzYwNzcyMjI1LCJleHAiOjE3NjA3NzMxMjUsImF1ZCI6InNoZW1hLW11c2ljLWFwaSIsImlzcyI6InNoZW1hLW11c2ljLWF1dGgifQ.DHhdtK0zmwfLQyeYP22YAPyrn7zAOOe_4awwT9br9rs"
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OGU3NzQwMC1mOTUyLTQyNjUtYTc4OS00MWQ5ZjdiYzgyZGIiLCJlbWFpbCI6ImFkbWluQHNoZW1hbXVzaWMuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzYwNzc4NTUwLCJleHAiOjE3NjA3Nzk0NTAsImF1ZCI6InNoZW1hLW11c2ljLWFwaSIsImlzcyI6InNoZW1hLW11c2ljLWF1dGgifQ.wEB3B6C3DgSHrA0nShAR06KPsYItVtZ6iRnROInCHpY"
         },
         "body": {
           "title": "Test Guitar Course",
@@ -919,9 +919,9 @@
         },
         "error": null
       },
-      "duration": "34ms",
+      "duration": "5ms",
       "passed": false,
-      "timestamp": "2025-10-18T07:23:45.440Z"
+      "timestamp": "2025-10-18T09:09:10.517Z"
     },
     {
       "name": "Course: Get Course by ID (GET)",
@@ -943,9 +943,9 @@
         },
         "error": null
       },
-      "duration": "4ms",
+      "duration": "3ms",
       "passed": true,
-      "timestamp": "2025-10-18T07:23:45.445Z"
+      "timestamp": "2025-10-18T09:09:10.520Z"
     },
     {
       "name": "Course: Update Course - Admin (PUT)",
@@ -953,7 +953,7 @@
       "endpoint": "/api/courses/undefined",
       "request": {
         "headers": {
-          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OGU3NzQwMC1mOTUyLTQyNjUtYTc4OS00MWQ5ZjdiYzgyZGIiLCJlbWFpbCI6ImFkbWluQHNoZW1hbXVzaWMuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzYwNzcyMjI1LCJleHAiOjE3NjA3NzMxMjUsImF1ZCI6InNoZW1hLW11c2ljLWFwaSIsImlzcyI6InNoZW1hLW11c2ljLWF1dGgifQ.DHhdtK0zmwfLQyeYP22YAPyrn7zAOOe_4awwT9br9rs"
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OGU3NzQwMC1mOTUyLTQyNjUtYTc4OS00MWQ5ZjdiYzgyZGIiLCJlbWFpbCI6ImFkbWluQHNoZW1hbXVzaWMuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzYwNzc4NTUwLCJleHAiOjE3NjA3Nzk0NTAsImF1ZCI6InNoZW1hLW11c2ljLWFwaSIsImlzcyI6InNoZW1hLW11c2ljLWF1dGgifQ.wEB3B6C3DgSHrA0nShAR06KPsYItVtZ6iRnROInCHpY"
         },
         "body": {
           "title": "Test Guitar Course - Updated",
@@ -972,9 +972,9 @@
         },
         "error": null
       },
-      "duration": "6ms",
+      "duration": "4ms",
       "passed": true,
-      "timestamp": "2025-10-18T07:23:45.451Z"
+      "timestamp": "2025-10-18T09:09:10.524Z"
     },
     {
       "name": "Booking: Get Pending Bookings - Admin (GET)",
@@ -982,7 +982,7 @@
       "endpoint": "/api/bookings/pending",
       "request": {
         "headers": {
-          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OGU3NzQwMC1mOTUyLTQyNjUtYTc4OS00MWQ5ZjdiYzgyZGIiLCJlbWFpbCI6ImFkbWluQHNoZW1hbXVzaWMuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzYwNzcyMjI1LCJleHAiOjE3NjA3NzMxMjUsImF1ZCI6InNoZW1hLW11c2ljLWFwaSIsImlzcyI6InNoZW1hLW11c2ljLWF1dGgifQ.DHhdtK0zmwfLQyeYP22YAPyrn7zAOOe_4awwT9br9rs"
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OGU3NzQwMC1mOTUyLTQyNjUtYTc4OS00MWQ5ZjdiYzgyZGIiLCJlbWFpbCI6ImFkbWluQHNoZW1hbXVzaWMuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzYwNzc4NTUwLCJleHAiOjE3NjA3Nzk0NTAsImF1ZCI6InNoZW1hLW11c2ljLWFwaSIsImlzcyI6InNoZW1hLW11c2ljLWF1dGgifQ.wEB3B6C3DgSHrA0nShAR06KPsYItVtZ6iRnROInCHpY"
         },
         "body": null
       },
@@ -998,9 +998,9 @@
         },
         "error": null
       },
-      "duration": "611ms",
+      "duration": "613ms",
       "passed": false,
-      "timestamp": "2025-10-18T07:23:46.062Z"
+      "timestamp": "2025-10-18T09:09:11.138Z"
     },
     {
       "name": "Customer: Create Guest Chat Session (POST)",
@@ -1027,9 +1027,9 @@
         },
         "error": null
       },
-      "duration": "1ms",
+      "duration": "3ms",
       "passed": false,
-      "timestamp": "2025-10-18T07:23:46.064Z"
+      "timestamp": "2025-10-18T09:09:11.142Z"
     },
     {
       "name": "Aggregation: Dashboard Stats - Admin (GET)",
@@ -1037,7 +1037,7 @@
       "endpoint": "/api/dashboard/stats",
       "request": {
         "headers": {
-          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OGU3NzQwMC1mOTUyLTQyNjUtYTc4OS00MWQ5ZjdiYzgyZGIiLCJlbWFpbCI6ImFkbWluQHNoZW1hbXVzaWMuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzYwNzcyMjI1LCJleHAiOjE3NjA3NzMxMjUsImF1ZCI6InNoZW1hLW11c2ljLWFwaSIsImlzcyI6InNoZW1hLW11c2ljLWF1dGgifQ.DHhdtK0zmwfLQyeYP22YAPyrn7zAOOe_4awwT9br9rs"
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OGU3NzQwMC1mOTUyLTQyNjUtYTc4OS00MWQ5ZjdiYzgyZGIiLCJlbWFpbCI6ImFkbWluQHNoZW1hbXVzaWMuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzYwNzc4NTUwLCJleHAiOjE3NjA3Nzk0NTAsImF1ZCI6InNoZW1hLW11c2ljLWFwaSIsImlzcyI6InNoZW1hLW11c2ljLWF1dGgifQ.wEB3B6C3DgSHrA0nShAR06KPsYItVtZ6iRnROInCHpY"
         },
         "body": null
       },
@@ -1061,9 +1061,9 @@
         },
         "error": null
       },
-      "duration": "12ms",
+      "duration": "4ms",
       "passed": true,
-      "timestamp": "2025-10-18T07:23:46.077Z"
+      "timestamp": "2025-10-18T09:09:11.146Z"
     },
     {
       "name": "Aggregation: Admin Dashboard (GET)",
@@ -1071,7 +1071,7 @@
       "endpoint": "/api/dashboard/admin",
       "request": {
         "headers": {
-          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OGU3NzQwMC1mOTUyLTQyNjUtYTc4OS00MWQ5ZjdiYzgyZGIiLCJlbWFpbCI6ImFkbWluQHNoZW1hbXVzaWMuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzYwNzcyMjI1LCJleHAiOjE3NjA3NzMxMjUsImF1ZCI6InNoZW1hLW11c2ljLWFwaSIsImlzcyI6InNoZW1hLW11c2ljLWF1dGgifQ.DHhdtK0zmwfLQyeYP22YAPyrn7zAOOe_4awwT9br9rs"
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OGU3NzQwMC1mOTUyLTQyNjUtYTc4OS00MWQ5ZjdiYzgyZGIiLCJlbWFpbCI6ImFkbWluQHNoZW1hbXVzaWMuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzYwNzc4NTUwLCJleHAiOjE3NjA3Nzk0NTAsImF1ZCI6InNoZW1hLW11c2ljLWFwaSIsImlzcyI6InNoZW1hLW11c2ljLWF1dGgifQ.wEB3B6C3DgSHrA0nShAR06KPsYItVtZ6iRnROInCHpY"
         },
         "body": null
       },
@@ -1093,9 +1093,9 @@
         },
         "error": null
       },
-      "duration": "5ms",
+      "duration": "3ms",
       "passed": true,
-      "timestamp": "2025-10-18T07:23:46.082Z"
+      "timestamp": "2025-10-18T09:09:11.150Z"
     },
     {
       "name": "Auth: Admin Logout (POST)",
@@ -1103,7 +1103,7 @@
       "endpoint": "/api/auth/logout",
       "request": {
         "headers": {
-          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OGU3NzQwMC1mOTUyLTQyNjUtYTc4OS00MWQ5ZjdiYzgyZGIiLCJlbWFpbCI6ImFkbWluQHNoZW1hbXVzaWMuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzYwNzcyMjI1LCJleHAiOjE3NjA3NzMxMjUsImF1ZCI6InNoZW1hLW11c2ljLWFwaSIsImlzcyI6InNoZW1hLW11c2ljLWF1dGgifQ.DHhdtK0zmwfLQyeYP22YAPyrn7zAOOe_4awwT9br9rs"
+          "Authorization": "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI4OGU3NzQwMC1mOTUyLTQyNjUtYTc4OS00MWQ5ZjdiYzgyZGIiLCJlbWFpbCI6ImFkbWluQHNoZW1hbXVzaWMuY29tIiwicm9sZSI6ImFkbWluIiwiaWF0IjoxNzYwNzc4NTUwLCJleHAiOjE3NjA3Nzk0NTAsImF1ZCI6InNoZW1hLW11c2ljLWFwaSIsImlzcyI6InNoZW1hLW11c2ljLWF1dGgifQ.wEB3B6C3DgSHrA0nShAR06KPsYItVtZ6iRnROInCHpY"
         },
         "body": null
       },
@@ -1119,9 +1119,9 @@
         },
         "error": null
       },
-      "duration": "611ms",
+      "duration": "610ms",
       "passed": false,
-      "timestamp": "2025-10-18T07:23:46.694Z"
+      "timestamp": "2025-10-18T09:09:11.761Z"
     }
   ]
 }

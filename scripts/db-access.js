@@ -214,6 +214,36 @@ const commands = {
     }
   },
 
+  async table(tableName, column = '*', limit = 10) {
+    console.log(`\n📋 Fetching ${limit} records from table '${tableName}' (column: ${column})...\n`);
+
+    try {
+      let query = supabase.from(tableName).select(column);
+
+      if (column !== '*') {
+        // For specific columns, order by created_at desc to get latest
+        query = query.order('created_at', { ascending: false });
+      }
+
+      const { data, error } = await query.limit(parseInt(limit));
+
+      if (error) throw error;
+
+      if (column === '*') {
+        formatTable(data);
+      } else {
+        // For single column, display differently
+        console.log(`Column '${column}' values:`);
+        data.forEach((row, index) => {
+          console.log(`${index + 1}. ${JSON.stringify(row[column], null, 2)}`);
+        });
+        console.log(`\nTotal records: ${data.length}`);
+      }
+    } catch (error) {
+      console.error('❌ Error:', error.message);
+    }
+  },
+
   async help() {
     console.log(`
 ╔══════════════════════════════════════════════════════════════════════════════╗
@@ -230,6 +260,7 @@ Commands:
   courses [limit]          List courses (default: 10)
   enrollments [limit]      List enrollments (default: 10)
   bookings [limit]         List bookings (default: 10)
+  table <name> [column] [limit]  Query table by name, optional column, limit (default: *, 10)
   ddl <sql>                Execute DDL operations (CREATE, DROP, ALTER)
   query <sql>              Execute SQL query (requires stored procedure)
   help                     Show this help message
@@ -239,6 +270,8 @@ Examples:
   node scripts/db-access.js users 5
   node scripts/db-access.js courses 20
   node scripts/db-access.js bookings
+  node scripts/db-access.js table result_test
+  node scripts/db-access.js table result_test ai_analysis 1
   node scripts/db-access.js ddl "CREATE TABLE test (id SERIAL PRIMARY KEY, name TEXT)"
 
 Note:
