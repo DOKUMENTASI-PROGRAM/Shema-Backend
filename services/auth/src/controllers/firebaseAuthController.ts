@@ -16,8 +16,12 @@ import {
 import { redisClient } from '../config/redis'
 import type { User, APIResponse } from '../types'
 
-// Initialize Firebase on module load
-initializeFirebase()
+// Initialize Firebase on module load (optional)
+try {
+  initializeFirebase()
+} catch (error) {
+  console.warn('⚠️  Firebase initialization failed in controller:', error instanceof Error ? error.message : String(error))
+}
 
 // Validation Schemas
 const firebaseLoginSchema = z.object({

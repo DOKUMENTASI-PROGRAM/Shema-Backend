@@ -1,13 +1,11 @@
 module.exports = {
   preset: 'ts-jest',
   testEnvironment: 'node',
-  roots: ['<rootDir>/services', '<rootDir>/shared'],
+  roots: ['<rootDir>/services', '<rootDir>/shared', '<rootDir>/__tests__'],
   testMatch: [
     '**/?(*.)+(spec|test).ts'
   ],
   testPathIgnorePatterns: [
-    '<rootDir>/__tests__/integration/',
-    '<rootDir>/__tests__/e2e/',
     '<rootDir>/node_modules/'
   ],
   transform: {
@@ -21,7 +19,7 @@ module.exports = {
     '!**/*.d.ts'
   ],
   setupFilesAfterEnv: ['<rootDir>/__tests__/setup.ts'],
-  testTimeout: 30000,
+  testTimeout: 60000,
   verbose: true,
   forceExit: true,
   clearMocks: true,

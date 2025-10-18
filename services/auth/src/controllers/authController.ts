@@ -51,7 +51,7 @@ export async function register(c: Context) {
       }, 400)
     }
 
-    // Check if user already exists
+    // Check if user already exists in our users table
     const { data: existingUser } = await supabase
       .from('users')
       .select('id')
@@ -68,15 +68,35 @@ export async function register(c: Context) {
       }, 409)
     }
 
-    // Hash password
-    const passwordHash = await hashPassword(validatedData.password)
+    // Create user in Supabase Auth
+    const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+      email: validatedData.email,
+      password: validatedData.password,
+      email_confirm: true,
+      user_metadata: {
+        full_name: validatedData.full_name,
+        role: validatedData.role
+      }
+    })
 
-    // Create user in database
+    if (authError || !authUser.user) {
+      console.error('Auth error:', authError)
+      return c.json<APIResponse>({
+        success: false,
+        error: {
+          code: 'AUTH_ERROR',
+          message: 'Failed to create user account',
+          details: authError?.message
+        }
+      }, 500)
+    }
+
+    // Create user in our users table
     const { data: newUser, error: insertError } = await supabase
       .from('users')
       .insert({
+        id: authUser.user.id,
         email: validatedData.email,
-        password_hash: passwordHash,
         full_name: validatedData.full_name,
         role: validatedData.role as UserRole,
         phone_number: validatedData.phone_number
@@ -86,6 +106,8 @@ export async function register(c: Context) {
 
     if (insertError || !newUser) {
       console.error('Database error:', insertError)
+      // Try to delete the auth user if database insert failed
+      await supabase.auth.admin.deleteUser(authUser.user.id)
       return c.json<APIResponse>({
         success: false,
         error: {
@@ -173,7 +195,7 @@ export async function login(c: Context) {
     const body = await c.req.json()
     const validatedData = loginSchema.parse(body)
 
-    // Find user by email
+    // Find user by email in our users table
     const { data: user, error: userError } = await supabase
       .from('users')
       .select('*')
@@ -190,10 +212,13 @@ export async function login(c: Context) {
       }, 401)
     }
 
-    // Compare passwords
-    const isPasswordValid = await comparePassword(validatedData.password, user.password_hash)
+    // Use Supabase Auth to verify password
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email: validatedData.email,
+      password: validatedData.password
+    })
 
-    if (!isPasswordValid) {
+    if (authError || !authData.user) {
       return c.json<APIResponse>({
         success: false,
         error: {

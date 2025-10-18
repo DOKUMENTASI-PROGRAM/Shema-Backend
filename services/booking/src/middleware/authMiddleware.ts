@@ -4,8 +4,23 @@
  */
 
 import type { Context, Next } from 'hono'
-import { verify } from 'jsonwebtoken'
 import type { APIResponse } from '../types'
+
+// Dynamic import for jsonwebtoken to avoid Bun issues
+let jwtVerify: any = null
+
+async function loadJWT() {
+  if (!jwtVerify) {
+    try {
+      const jwt = await import('jsonwebtoken')
+      jwtVerify = jwt.verify
+    } catch (error) {
+      console.error('Failed to load jsonwebtoken:', error)
+      throw error
+    }
+  }
+  return jwtVerify
+}
 
 export interface JWTPayload {
   userId: string
@@ -37,6 +52,7 @@ export async function authMiddleware(c: Context, next: Next) {
 
     // Verify token
     const jwtSecret = process.env.JWT_SECRET || 'your-secret-key'
+    const verify = await loadJWT()
     const decoded = verify(token, jwtSecret) as JWTPayload
 
     // Attach user info to context

@@ -76,9 +76,14 @@ const PORT = process.env.PORT || 3001
 
 async function start() {
   try {
-    // Initialize Firebase Admin SDK
+    // Initialize Firebase Admin SDK (optional)
     console.log('🔥 Initializing Firebase Admin SDK...')
-    initializeFirebase()
+    const firebaseApp = initializeFirebase()
+    if (firebaseApp) {
+      console.log('✅ Firebase Admin SDK initialized')
+    } else {
+      console.log('⚠️  Firebase Admin SDK not available (service account file missing)')
+    }
     
     // Connect to Redis
     console.log('🔄 Connecting to Redis...')
@@ -87,7 +92,9 @@ async function start() {
     console.log(`🚀 Auth Service starting on port ${PORT}...`)
     console.log(`📍 Health check: http://localhost:${PORT}/health`)
     console.log(`🔐 JWT Auth: http://localhost:${PORT}/api/auth/*`)
-    console.log(`🔥 Firebase Auth: http://localhost:${PORT}/api/auth/firebase/*`)
+    if (firebaseApp) {
+      console.log(`🔥 Firebase Auth: http://localhost:${PORT}/api/auth/firebase/*`)
+    }
     console.log(`📝 Environment: ${process.env.NODE_ENV || 'development'}`)
     
   } catch (error) {

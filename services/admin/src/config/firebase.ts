@@ -20,14 +20,15 @@ let firebaseApp: admin.app.App | null = null
 /**
  * Initialize Firebase Admin SDK
  */
-export function initializeFirebase(): admin.app.App {
+export function initializeFirebase(): admin.app.App | null {
   if (firebaseApp) {
     return firebaseApp
   }
 
+  // Load service account from file
+  const serviceAccountPath = join(__dirname, '../../config/firebase-service-account.json')
+
   try {
-    // Load service account from file
-    const serviceAccountPath = join(__dirname, '../../config/firebase-service-account.json')
     const serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf-8'))
 
     // Initialize Firebase Admin
@@ -42,8 +43,11 @@ export function initializeFirebase(): admin.app.App {
 
     return firebaseApp
   } catch (error) {
-    console.error('❌ Failed to initialize Firebase Admin SDK:', error)
-    throw error
+    console.warn('⚠️  Firebase service account file not found, Firebase auth disabled')
+    console.warn('   Path checked:', serviceAccountPath)
+    console.warn('   This is normal for development/testing without Firebase setup')
+    console.warn('   Error:', error instanceof Error ? error.message : String(error))
+    return null
   }
 }
 
