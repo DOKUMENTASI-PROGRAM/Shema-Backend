@@ -18,11 +18,10 @@ Backend/
 ├── services/                    # All microservices
 │   ├── api-gateway/            ✅ Port 3000 - Entry point & routing
 │   ├── auth/                   ✅ Port 3001 - Authentication & authorization
-│   ├── user/                   ⏳ Port 3002 - User management
-│   ├── course/                 ⏳ Port 3003 - Course & schedule management
-│   ├── booking/                ⏳ Port 3004 - Booking system
-│   ├── chat/                   ⏳ Port 3005 - Live chat (WebSocket)
-│   └── recommendation/         ⏳ Port 3006 - AI-based recommendations
+│   ├── user/                   ✅ Port 3002 - User management
+│   ├── course/                 ✅ Port 3003 - Course & schedule management
+│   ├── booking/                ✅ Port 3004 - Booking system
+│   └── recommendation/         ✅ Port 3005 - AI-based recommendations
 ├── shared/                      # Shared utilities
 │   ├── config/                 # Shared configs (Supabase, Redis)
 │   ├── middleware/             # Shared middleware
@@ -251,11 +250,10 @@ curl -X POST http://localhost:3000/api/auth/login \
 |---------|------|--------|----------|
 | API Gateway | 3000 | ✅ Complete | Routing, aggregation, health checks |
 | Auth Service | 3001 | ✅ Complete | JWT auth, Firebase integration |
-| User Service | 3002 | ⏳ In Progress | User CRUD operations |
-| Course Service | 3003 | ⏳ Planned | Course & schedule management |
-| Booking Service | 3004 | ⏳ Planned | 2-slot booking system |
-| Chat Service | 3005 | ⏳ Planned | WebSocket live chat |
-| Recommendation Service | 3006 | ⏳ Planned | AI recommendations |
+| User Service | 3002 | ✅ In Progress | User CRUD operations |
+| Course Service | 3003 | ✅ Planned | Course & schedule management |
+| Booking Service | 3004 | ✅ Planned | 2-slot booking system |
+| Recommendation Service | 3005 | ✅ Planned | AI recommendations |
 
 ## 🔐 Environment Variables
 
@@ -302,17 +300,6 @@ node scripts/test-all-endpoints.js
 code docs/ENDPOINT_TESTING_SUMMARY.md
 ```
 
-### Test Results (Latest: Oct 13, 2025)
-- ✅ **10 endpoints passing** (41.67%)
-- ❌ **14 endpoints with issues** (58.33%)
-- ✅ All services healthy and running
-- ✅ Authentication working (Admin)
-- ✅ User management working (Admin)
-- ✅ Chat service working (Create session, Get messages)
-- ✅ Aggregation endpoints working
-- ⚠️ Course Service needs fixes
-- ⚠️ Booking Service needs implementation
-
 ## �🤝 Contributing
 
 ### Development Workflow
@@ -338,32 +325,6 @@ This project uses GitHub Copilot with custom instructions. See [`.github/copilot
 - **Team**: [Add team info]
 - **Repository**: [Add repository URL]
 
-## 🗺️ Roadmap
-
-### Phase 1: Core Services (Current)
-- ✅ API Gateway implementation
-- ✅ Auth Service with Firebase
-- ⏳ User Service CRUD
-
-### Phase 2: Business Logic
-- ⏳ Course Service implementation
-- ⏳ Booking Service with 2-slot system
-- ⏳ Admin dashboard data aggregation
-
-### Phase 3: Real-time Features
-- ⏳ Live Chat with WebSocket
-- ⏳ Real-time notifications
-
-### Phase 4: AI Integration
-- ⏳ Recommendation engine
-- ⏳ ML model integration
-
-### Phase 5: Production
-- ⏳ Performance optimization
-- ⏳ Security hardening
-- ⏳ Deployment to production
-
----
 
 **Status**: 🚧 In Active Development  
 **Last Updated**: October 10, 2025  
