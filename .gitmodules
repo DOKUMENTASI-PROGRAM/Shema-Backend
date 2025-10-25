@@ -1,0 +1,18 @@
+[submodule "admin"]
+	path = admin
+	url = https://github.com/DOKUMENTASI-PROGRAM/Admin-Service.git
+[submodule "api-gateway"]
+	path = api-gateway
+	url = https://github.com/DOKUMENTASI-PROGRAM/Api-Gateway.git
+[submodule "auth"]
+	path = auth
+	url = https://github.com/DOKUMENTASI-PROGRAM/Auth-Service.git
+[submodule "booking"]
+	path = booking
+	url = https://github.com/DOKUMENTASI-PROGRAM/Booking-Service.git
+[submodule "course"]
+	path = course
+	url = https://github.com/DOKUMENTASI-PROGRAM/Course-Service.git
+[submodule "recommendation"]
+	path = recommendation
+	url = https://github.com/DOKUMENTASI-PROGRAM/Recommedation-Service.git

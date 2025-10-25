@@ -1,6 +1,6 @@
 Semua program dijalankan melalui docker, akses database melalui docker, cloudflare melalui docker, setiap services dijadikan image dan dijalankan melalui docker.
-environment library yang digunakan adalah bun 
 environment semua services diatur di docker-compose.yml dan docker-compose.override.yml
+Service berada di folder root projek, service tersebut adalah admin, api-gateway, auth, booking, course, documentation dan recommendation.
 semua service menggunakan image yang mounting ke codebase jadi jika ganti config cukup restart containernya saja.
 User menggunakan windows.
 Auth service itu hanya bisa digunakan untuk admin saja. Siswa itu hanya bisa regist course

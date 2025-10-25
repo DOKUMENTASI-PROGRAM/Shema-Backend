@@ -24,11 +24,13 @@ services:
   # ============================================
   api-gateway:
     build:
-      context: ./services/api-gateway
+      context: ./api-gateway
       dockerfile: Dockerfile
     container_name: shema-api-gateway
     ports:
       - "3000:3000"
+    env_file:
+      - .env
     environment:
       - HOST=0.0.0.0
       - PORT=3000
@@ -56,6 +58,8 @@ services:
         condition: service_started
       booking-service:
         condition: service_started
+      recommendation-service:
+        condition: service_started
     networks:
       - shema-network
     restart: unless-stopped
@@ -65,11 +69,13 @@ services:
   # ============================================
   auth-service:
     build:
-      context: ./services/auth
+      context: ./auth
       dockerfile: Dockerfile
     container_name: shema-auth-service
     ports:
       - "3001:3001"
+    env_file:
+      - .env
     environment:
       - PORT=3001
       - NODE_ENV=${NODE_ENV:-development}
@@ -102,11 +108,13 @@ services:
   # ============================================
   admin-service:
     build:
-      context: .
-      dockerfile: ./services/admin/Dockerfile
+      context: ./admin
+      dockerfile: Dockerfile
     container_name: shema-admin-service
     ports:
       - "3002:3002"
+    env_file:
+      - .env
     environment:
       - PORT=3002
       - NODE_ENV=${NODE_ENV:-development}
@@ -136,11 +144,13 @@ services:
   # ============================================
   course-service:
     build:
-      context: .
-      dockerfile: ./services/course/Dockerfile
+      context: ./course
+      dockerfile: Dockerfile
     container_name: shema-course-service
     ports:
       - "3003:3003"
+    env_file:
+      - .env
     environment:
       - PORT=3003
       - NODE_ENV=${NODE_ENV:-development}
@@ -170,11 +180,13 @@ services:
   # ============================================
   booking-service:
     build:
-      context: .
-      dockerfile: ./services/booking/Dockerfile
+      context: ./booking
+      dockerfile: Dockerfile
     container_name: shema-booking-service
     ports:
       - "3004:3004"
+    env_file:
+      - .env
     environment:
       - PORT=3004
       - NODE_ENV=${NODE_ENV:-development}
@@ -210,7 +222,7 @@ services:
   # ============================================
   documentation-service:
     build:
-      context: ./services/documentation
+      context: ./documentation
       dockerfile: Dockerfile
     container_name: shema-documentation-service
     ports:
@@ -227,11 +239,13 @@ services:
   # ============================================
   recommendation-service:
     build:
-      context: ./services/recommendation
+      context: ./recommendation
       dockerfile: Dockerfile
     container_name: shema-recommendation-service
     ports:
       - "3005:3005"
+    env_file:
+      - .env
     environment:
       - PORT=3005
       - NODE_ENV=${NODE_ENV:-development}
