@@ -48,7 +48,7 @@ Dokumen ini menjelaskan proses migrasi service dari monorepo ke git submodule un
 - **Status**: ✅ Selesai dimigrasi
 
 ### 7. Documentation Service
-- **Repository**: https://github.com/DOKUMENTASI-PROGRAM/Documentation-Service.git
+- **Repository**: https://github.com/DOKUMENTASI-PROGRAM/Docummentation-Service.git
 - **Port**: 3007
 - **Deskripsi**: Service untuk dokumentasi API
 - **Status**: ⚠️ Perlu dibuat repository terlebih dahulu
