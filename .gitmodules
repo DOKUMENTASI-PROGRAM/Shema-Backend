@@ -16,3 +16,6 @@
 [submodule "recommendation"]
 	path = recommendation
 	url = https://github.com/DOKUMENTASI-PROGRAM/Recommedation-Service.git
+[submodule "notification"]
+	path = notification
+	url = https://github.com/DOKUMENTASI-PROGRAM/Notification-Service.git
