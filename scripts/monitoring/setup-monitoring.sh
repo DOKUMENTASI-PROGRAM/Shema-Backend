@@ -606,7 +606,7 @@ create_health_check_script() {
 # This script performs comprehensive health checks on all services
 
 SERVICES=(
-    "api-gateway:3000"
+    "http://api.shemamusic.my.id"
     "auth-service:3001"
     "admin-service:3002"
     "course-service:3003"

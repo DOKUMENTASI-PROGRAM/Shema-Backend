@@ -1,0 +1,12 @@
+{
+  "assessment_data": {
+    "age": 25,
+    "instruments": ["guitar", "piano"],
+    "experience_level": "beginner",
+    "learning_goals": ["career_advancement", "personal_enjoyment"],
+    "learning_style": "visual",
+    "preferred_genres": ["pop", "rock"],
+    "time_commitment": "2-3 hours per week",
+    "budget": "moderate"
+  }
+}

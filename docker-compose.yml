@@ -18,6 +18,28 @@ services:
       retries: 5
 
   # ============================================
+  # RABBITMQ - Message Queue (Replaces Kafka)
+  # ============================================
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    container_name: shema-rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: shema
+      RABBITMQ_DEFAULT_PASS: shema_password
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks:
+      - shema-network
+    healthcheck:
+      test: rabbitmq-diagnostics -q ping
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ============================================
   # API GATEWAY - Port 3000
   # ============================================
   api-gateway:
@@ -27,6 +49,8 @@ services:
     container_name: shema-api-gateway
     ports:
       - "3000:3000"
+      - "8080:8080"
+      - "8081:8081"
     env_file:
       - .env
     environment:
@@ -38,18 +62,22 @@ services:
       - AUTH_SERVICE_URL=http://auth-service:3001
       - ADMIN_SERVICE_URL=http://admin-service:3002
       - COURSE_SERVICE_URL=http://course-service:3003
-      - BOOKING_SERVICE_URL=http://booking-service:3004
+      - BOOKING_SERVICE_URL=http://booking-service:3008
       - RECOMMENDATION_SERVICE_URL=http://recommendation-service:3005
       - JWT_SECRET=${JWT_SECRET}
       - SERVICE_JWT_SECRET=${SERVICE_JWT_SECRET}
       - CORS_ORIGIN=${CORS_ORIGIN:-*}
       - SERVICE_TIMEOUT=30000
       - MAX_RETRIES=3
+    volumes:
+      - ./api-gateway/src:/app/src
+      - ./api-gateway/shared:/app/shared
+      - ./config:/app/config:ro
     depends_on:
       redis:
         condition: service_healthy
       auth-service:
-        condition: service_started
+        condition: service_healthy
       admin-service:
         condition: service_started
       course-service:
@@ -87,8 +115,6 @@ services:
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
       - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
-    # Note: env_file removed to prevent overriding environment variables from docker-compose
-    # All required env vars are set above from .env.production
     depends_on:
       redis:
         condition: service_healthy
@@ -99,6 +125,12 @@ services:
       - 8.8.4.4
     extra_hosts:
       - "host.docker.internal:host-gateway"
+    healthcheck:
+      test: ["CMD-SHELL", "node -e \"require('http').get('http://localhost:3001/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) }).on('error', () => process.exit(1))\""]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
     restart: unless-stopped
 
   # ============================================
@@ -125,6 +157,8 @@ services:
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
       - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
       - CORS_ORIGIN=${CORS_ORIGIN:-*}
+    volumes:
+      - ./config:/app/config:ro
     depends_on:
       redis:
         condition: service_healthy
@@ -174,7 +208,7 @@ services:
     restart: unless-stopped
 
   # ============================================
-  # BOOKING SERVICE - Port 3004
+  # BOOKING SERVICE - Port 3006
   # ============================================
   booking-service:
     build:
@@ -182,11 +216,11 @@ services:
       dockerfile: Dockerfile
     container_name: shema-booking-service
     ports:
-      - "3004:3004"
+      - "3006:3008"
     env_file:
       - .env
     environment:
-      - PORT=3004
+      - PORT=3008
       - NODE_ENV=${NODE_ENV:-development}
       - SERVICE_NAME=booking-service
       - REDIS_URL=${REDIS_URL}
@@ -197,10 +231,12 @@ services:
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
       - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
-    # Note: env_file removed to prevent overriding environment variables from docker-compose
-    # All required env vars are set above from .env.production
+      # RabbitMQ configuration
+      - RABBITMQ_URL=amqp://shema:shema_password@rabbitmq:5672
     depends_on:
       redis:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
       admin-service:
         condition: service_started
@@ -228,6 +264,8 @@ services:
     environment:
       - PORT=3007
       - NODE_ENV=${NODE_ENV:-development}
+    volumes:
+      - ./documentation:/app
     networks:
       - shema-network
     restart: unless-stopped
@@ -256,8 +294,54 @@ services:
       - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
       # Google AI configuration
       - GOOGLE_AI_API_KEY=${GOOGLE_AI_API_KEY}
+      # RabbitMQ configuration
+      - RABBITMQ_URL=amqp://shema:shema_password@rabbitmq:5672
+    volumes:
+      - ./recommendation:/app
+      - /app/node_modules
     depends_on:
       redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    networks:
+      - shema-network
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+
+  # ============================================
+  # NOTIFICATION SERVICE - Port 3009 (RabbitMQ Worker)
+  # ============================================
+  notification-service:
+    build:
+      context: ./notification
+      dockerfile: Dockerfile
+    container_name: shema-notification-service
+    ports:
+      - "3009:3009"
+    env_file:
+      - .env
+    environment:
+      - PORT=3009
+      - NODE_ENV=${NODE_ENV:-development}
+      - SERVICE_NAME=notification-service
+      - REDIS_URL=${REDIS_URL}
+      - RABBITMQ_URL=amqp://shema:shema_password@rabbitmq:5672
+      # Supabase configuration
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
+    volumes:
+      - ./notification:/app
+      - /app/node_modules
+    depends_on:
+      redis:
+        condition: service_healthy
+      rabbitmq:
         condition: service_healthy
     networks:
       - shema-network
@@ -310,6 +394,9 @@ volumes:
   redis-data:
     driver: local
     name: shema-redis-data
+  rabbitmq-data:
+    driver: local
+    name: shema-rabbitmq-data
   supabase-data:
     driver: local
     name: shema-supabase-data

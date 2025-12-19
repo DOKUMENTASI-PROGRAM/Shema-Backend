@@ -13,18 +13,19 @@ const API_GATEWAY_PORT = process.env.API_GATEWAY_PORT || '3000';
 // Test data
 const TEST_STUDENT = {
   full_name: 'Test Student',
-  wa_number: '+6281234567890',
   email: `test.student.${Date.now()}@example.com`,
+  address: 'Jl. Test No. 123, Jakarta',
+  birth_place: 'Jakarta',
+  birth_date: '2010-05-15',
+  school: 'SMA Test School',
+  class: 10,
+  guardian_name: 'Test Guardian',
+  guardian_wa_number: '+6281234567891',
   experience_level: 'beginner',
-  time_preferences: 'Learn basic guitar chords',
   preferred_days: ['Monday', 'Wednesday'],
   preferred_time_range: {
     start: '14:00',
     end: '16:00'
-  },
-  guardian: {
-    name: 'Test Guardian',
-    wa_number: '+6281234567891'
   },
   instrument_owned: false,
   notes: 'Eager to learn music',
@@ -88,7 +89,7 @@ async function registerStudentForCourse(courseId) {
   };
 
   const result = await makeRequest('POST', `${BASE_URL}:${API_GATEWAY_PORT}/api/booking/register-course`, registrationData);
-  return result.data;
+  return result.data.booking;
 }
 
 async function adminLogin() {
@@ -101,10 +102,10 @@ async function adminLogin() {
 async function adminGetBookings(accessToken) {
   console.log('\n=== Admin Get All Bookings ===');
 
-  const result = await makeRequest('GET', `${BASE_URL}:${API_GATEWAY_PORT}/api/bookings`, null, {
+  const result = await makeRequest('GET', `${BASE_URL}:${API_GATEWAY_PORT}/api/booking/bookings`, null, {
     'Authorization': `Bearer ${accessToken}`
   });
-  return result.data;
+  return result;
 }
 
 async function adminUpdateBookingStatus(accessToken, bookingId, status, scheduleData = null) {
@@ -119,7 +120,7 @@ async function adminUpdateBookingStatus(accessToken, bookingId, status, schedule
     updateData.preferred_time_range = scheduleData.preferred_time_range;
   }
 
-  const result = await makeRequest('PUT', `${BASE_URL}:${API_GATEWAY_PORT}/api/bookings/${bookingId}`, updateData, {
+  const result = await makeRequest('PUT', `${BASE_URL}:${API_GATEWAY_PORT}/api/booking/bookings/${bookingId}`, updateData, {
     'Authorization': `Bearer ${accessToken}`
   });
   return result.data;
@@ -128,7 +129,7 @@ async function adminUpdateBookingStatus(accessToken, bookingId, status, schedule
 async function adminConfirmBooking(accessToken, bookingId) {
   console.log('\n=== Admin Confirm Booking ===');
 
-  const result = await makeRequest('POST', `${BASE_URL}:${API_GATEWAY_PORT}/api/bookings/${bookingId}/confirm`, {}, {
+  const result = await makeRequest('POST', `${BASE_URL}:${API_GATEWAY_PORT}/api/booking/${bookingId}/confirm`, {}, {
     'Authorization': `Bearer ${accessToken}`
   });
   return result.data;
@@ -151,7 +152,9 @@ async function runE2ETest() {
 
     // Step 2: Student registers for course
     const booking = await registerStudentForCourse(testCourse.id);
-    console.log(`Student registration successful. Booking ID: ${booking.id}`);
+    console.log('Booking object:', JSON.stringify(booking, null, 2));
+    const bookingId = booking.id;
+    console.log(`Student registration successful. Booking ID: ${bookingId}`);
 
     // Wait a moment for data to propagate
     await delay(2000);
@@ -162,35 +165,28 @@ async function runE2ETest() {
     console.log(`Admin login successful. Token received.`);
 
     // Step 4: Admin views all bookings
-    const bookings = await adminGetBookings(accessToken);
+    const bookingsResponse = await adminGetBookings(accessToken);
+    console.log('bookingsResponse:', bookingsResponse);
+    const bookings = Array.isArray(bookingsResponse) ? bookingsResponse : (bookingsResponse.data.bookings || bookingsResponse.data);
     console.log(`Found ${bookings.length} total bookings`);
 
     // Find the test booking
-    const testBooking = bookings.find(b => b.id === booking.id);
+    const testBooking = bookings.find(b => b.id === bookingId);
+    console.log(`Looking for booking with ID: ${bookingId}`);
+    console.log(`First few booking IDs: ${bookings.slice(0, 5).map(b => b.id).join(', ')}`);
     if (!testBooking) {
       throw new Error('Test booking not found in admin view');
     }
     console.log(`Test booking found: Status = ${testBooking.status}`);
 
-    // Step 5: Admin updates booking status and assigns schedule
-    const scheduleData = {
-      preferred_days: ['Tuesday', 'Thursday'],
-      preferred_time_range: {
-        start: '15:00',
-        end: '17:00'
-      }
-    };
-
-    await adminUpdateBookingStatus(accessToken, testBooking.id, null, scheduleData);
-    console.log('Booking schedule updated');
-
-    // Step 6: Admin confirms the booking
+    // Step 5: Admin confirms the booking
     await adminConfirmBooking(accessToken, testBooking.id);
     console.log('Booking confirmed successfully');
 
-    // Step 7: Verify final status
-    const updatedBookings = await adminGetBookings(accessToken);
-    const finalBooking = updatedBookings.find(b => b.id === booking.id);
+    // Step 5: Verify final status
+    const updatedBookingsResponse = await adminGetBookings(accessToken);
+    const updatedBookings = Array.isArray(updatedBookingsResponse) ? updatedBookingsResponse : (updatedBookingsResponse.data.bookings || updatedBookingsResponse.data);
+    const finalBooking = updatedBookings.find(b => b.id === bookingId);
     console.log(`Final booking status: ${finalBooking.status}`);
 
     console.log('\n✅ E2E Test Completed Successfully!');

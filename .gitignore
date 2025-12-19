@@ -102,9 +102,15 @@ temp/
 # Local Supabase
 .supabase/
 
+# Firebase service account (sensitive credentials)
+firebase-service-account.json
+auth/config/firebase-service-account.json
+
 # Build outputs
 build/
 dist/
 *.tsbuildinfo
 .env.production
 .env.development
+cookie.txt
+session.xml
