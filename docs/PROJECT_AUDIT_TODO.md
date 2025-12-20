@@ -1,63 +1,56 @@
 # PROJECT AUDIT & TODO LIST
 
-**Date:** 2025-12-19
-**Status:** Audit Result (Significant Findings)
+**Date:** 2025-12-20
+**Status:** Audit Result
 
 ## 1. High Priority (Critical Fixes)
 
 Hal-hal yang menyebabkan crash, error logika fatal, atau sisa migrasi yang berbahaya.
 
-- **[Notification Service] Fungsionalitas Stub/Kosong**
+- **[Migration/Services] Konfirmasi Penggunaan Library Hashing Password**
 
-  - _Deskripsi:_ Service notification saat ini hanya berupa "stub" yang menerima event dari RabbitMQ dan menunggu 500ms, tanpa melakukan pengiriman notifikasi (Email/WA) yang sebenarnya. Terdapat komentar "TODO: Implement actual notification logic".
-  - _Tindakan:_ Implementasikan integrasi provider email (misal: SendGrid/Nodemailer) dan WhatsApp (misal: Twilio/WAbot) pada fungsi pengiriman notifikasi, menggantikan logika dummy yang ada sekarang.
+  - _Deskripsi:_ Ditemukan dependensi library hashing password (`bcryptjs`) di `auth-service`, `admin-service`, dan `course-service`. Karena sistem sudah bermigrasi penuh ke Supabase Auth (yang menangani keamanan password secara internal), penggunaan hashing manual di level aplikasi berpotensi redundan atau mengindikasikan adanya pencampuran logika autentikasi legacy.
+  - _Tindakan:_ Audit penggunaan fungsi hashing di `utils/password.ts`. Jika hanya sisa legacy dan tidak digunakan untuk fitur khusus (misal: enkripsi data non-password), hapus library dan kode terkait untuk mengurangi bloat dan risiko keamanan.
 
-- **[Auth Service] Missing Event Publishing**
-
-  - _Deskripsi:_ Berdasarkan dokumentasi arsitektur, Auth Service seharusnya mem-publish event saat user melakukan registrasi/login. Saat ini, controller hanya menyimpan data ke database (Supabase) tanpa mengirim event ke Message Broker (RabbitMQ). Ini berpotensi memutus rantai komunikasi antar-service yang membutuhkan data user baru.
-  - _Tindakan:_ Tambahkan logika publishing event (misal: `user.registered`, `user.logged_in`) ke RabbitMQ setelah operasi database berhasil pada `register` dan `login` controller.
-
-- **[Refactoring] Pelanggaran Batas Controller-Service pada Booking**
-
-  - _Deskripsi:_ Logika bisnis kompleks (validasi, idempotency check, database transaction, event publishing) bercampur aduk di dalam file controller. Tidak ada layer "Service" yang terpisah secara jelas untuk meng-handle logika ini.
-  - _Tindakan:_ Ekstrak logika bisnis dari controller ke dalam file service khusus. Controller harusnya hanya bertugas menerima request, memanggil service, dan mengembalikan response.
-
-- **[Migration Integrity] Dependensi WebSocket Tak Terpakai**
-
-  - _Deskripsi:_ API Gateway telah beralih ke Supabase Realtime, namun dependensi library WebSocket (`ws`, `socket.io` atau sejenisnya) masih terdaftar di `package.json` pada `api-gateway` dan `notification` service.
-  - _Tindakan:_ Uninstall/hapus dependensi library WebSocket yang tidak lagi digunakan dan pastikan tidak ada kode inisialisasi WebSocket server yang masih berjalan secara tersembunyi.
-
-- **[Recommendation Service] Autentikasi Admin Belum Terimplementasi**
-  - _Deskripsi:_ Ditemukan komentar "TODO: Implement admin authentication" pada middleware. Ini adalah celah keamanan potensial jika endpoint admin terekspos tanpa perlindungan.
-  - _Tindakan:_ Implementasikan middleware autentikasi yang memvalidasi token/session admin dengan benar, terintegrasi dengan Auth Service.
+- **[Migration/Kafka] Hapus Sisa-sisa Kode Mock & Logging Kafka**
+  - _Deskripsi:_ Meskipun Docker Compose sudah menggunakan RabbitMQ, masih ditemukan:
+    1. Mocking modul Kafka pada unit test `recommendation-service`.
+    2. Log "Kafka consumer started" yang menyesatkan pada entry point `recommendation-service`.
+    3. Pengecekan status Kafka pada test `api-gateway`.
+  - _Tindakan:_ Bersihkan semua referensi kode, mocking, dan logging yang menyebutkan "Kafka" untuk mencegah kebingungan developer (developer confusion) saat debugging sistem messaging RabbitMQ yang baru.
 
 ## 2. Medium Priority (Cleanup & Optimization)
 
 Dead code, refactoring, dan penyelesaian fitur.
 
-- **[Code Hygiene] Penghapusan Dead Code "Booking Controller Clean"**
+- **[Cleanup] File Backup & Sampah**
 
-  - _Deskripsi:_ Terdapat file duplikat dengan suffix `_clean.ts` pada folder controller Booking yang tampaknya merupakan versi simplified/mock untuk testing namun terbawa ke source code utama.
-  - _Tindakan:_ Hapus file tersebut dan pastikan kode testing menggunakan mekanisme mocking yang benar (misal: Jest mocks) daripada membuat file source code dummy.
+  - _Deskripsi:_ Ditemukan file `.bak` dan `.backup` di dalam folder source code `api-gateway` (`src/index.ts.bak`, `src/index.ts.backup`).
+  - _Tindakan:_ Hapus file-file backup ini secepatnya agar tidak ter-commit ke repository atau membingungkan IDE saat navigasi kode.
 
-- **[Code Hygiene] Konsistensi Error Handling**
+- **[Booking Service] Implementasi Data Instruktor Real**
 
-  - _Deskripsi:_ Pola penanganan error (try-catch) sudah ada, namun format response error belum sepenuhnya seragam di semua service (misal: struktur JSON error detail).
-  - _Tindakan:_ Refactor blok catch untuk menggunakan utility/helper function response error yang standar, memastikan field seperti `code`, `message`, dan `details` selalu konsisten.
+  - _Deskripsi:_ Endpoint untuk mendapatkan daftar instruktor (`getAvailableInstructors`) masih menggunakan data hardcode/mock untuk field `experience_years`, `rating`, dan `available_slots`.
+  - _Tindakan:_ Ganti nilai placeholder dengan query database aktual atau logika penghitungan yang sesuai dari tabel terkait.
 
-- **[Completeness] Implementasi Instruktur-Course Mapping**
-  - _Deskripsi:_ Ditemukan TODO pada `availabilityService.ts` mengenai pemetaan instruktur ke course yang belum tersedia.
-  - _Tindakan:_ Lengkapi logika availability untuk memperhitungkan data instruktur yang spesifik untuk course tertentu ketika fitur tersebut sudah siap di database.
+- **[Scripting] Update Log Skenario Testing**
+
+  - _Deskripsi:_ Script testing otomatis (`scripts/`) masih mencetak log yang menyebutkan "Event Kafka" saat menjalankan skenario booking, padahal event yang dikirim adalah RabbitMQ.
+  - _Tindakan:_ Update string logging pada script testing untuk mencerminkan arsitektur aktual.
+
+- **[Auth Service] Review Mekanisme Fallback Registrasi**
+  - _Deskripsi:_ Logika registrasi user memiliki fallback manual: "Jika trigger Supabase gagal, buat user profile manual via API". Komentar kode menyebutkan `// Auto-confirm for now`.
+  - _Tindakan:_ Tinjau ulang apakah auto-confirm user masih diinginkan untuk production. Pastikan mekanisme fallback ini termonitor dengan baik agar tidak menutupi error pada Database Trigger.
 
 ## 3. Low Priority (Documentation & Minor Tweaks)
 
 Komentar, typo, penamaan.
 
-- **[Cleanup] Hapus Komentar Sisa Migrasi Kafka**
+- **[Documentation] Hapus Referensi Arsitektur Lama**
 
-  - _Deskripsi:_ Masih ditemukan baris kode yang dikomentari (commented-out code) terkait "Kafka Consumer Started" pada beberapa file entry point, padahal sistem sudah menggunakan RabbitMQ.
-  - _Tindakan:_ Hapus baris-baris komentar sampah sisa migrasi tersebut agar kode lebih bersih.
+  - _Deskripsi:_ Dokumen `README.md`, halaman landing page publik (`public/index.html`), dan dokumentasi internal flow data masih secara eksplisit menyebutkan penggunaan "Kafka" dan "Zookeeper".
+  - _Tindakan:_ Update seluruh dokumentasi teks untuk mengganti istilah Kafka dengan RabbitMQ dan WebSocket (Legacy) dengan Supabase Realtime.
 
-- **[Documentation] Update Deskripsi Package.json**
-  - _Deskripsi:_ Deskripsi project pada `package.json` di Notification Service masih menyebutkan "WebSocket communication", yang tidak lagi akurat jika sepenuhnya beralih ke Supabase Realtime/Push Notification.
-  - _Tindakan:_ Perbarui deskripsi pada `package.json` agar mencerminkan peran service yang sebenarnya (misal: "Notification Worker for Email/WA").
+- **[Code Hygiene] Konsistensi Logging**
+  - _Deskripsi:_ Penggunaan `console.log` tersebar luas untuk debugging info (misal: "📝 Register course endpoint called").
+  - _Tindakan:_ Pertimbangkan migrasi ke library logging terstandar (seperti Winston atau Pino) untuk manajemen log level yang lebih baik di production.

@@ -1,7 +1,7 @@
 # Dokumentasi API - FutureGuide Backend
 
-**Versi:** 1.0.0  
-**Terakhir Diperbarui:** 20 Desember 2024  
+**Versi:** 1.0.1  
+**Terakhir Diperbarui:** 20 Desember 2025  
 **Base URL:** `https://api.futureguide.id` atau `http://localhost:3000` (development)
 
 ---
@@ -39,7 +39,7 @@ Semua response mengikuti format standar:
   "success": true|false,
   "data": { ... },
   "meta": {
-    "timestamp": "2024-12-20T12:00:00Z"
+    "timestamp": "2025-12-20T12:00:00Z"
   },
   "error": {
     "code": "ERROR_CODE",
@@ -58,27 +58,27 @@ Service untuk autentikasi dan manajemen user.
 
 **POST** `/api/auth/register`
 
-Mendaftarkan user baru (admin only).
+Mendaftarkan user baru (admin only). Register user umum menggunakan Supabase Auth Client SDK secara langsung.
 
 **Request Body:**
 
 ```json
 {
-  "email": "user@example.com",
+  "email": "admin@example.com",
   "password": "password123",
-  "full_name": "John Doe",
-  "role": "student",
+  "full_name": "Admin User",
+  "role": "admin",
   "phone_number": "081234567890"
 }
 ```
 
-| Field        | Type   | Required | Keterangan                                  |
-| ------------ | ------ | -------- | ------------------------------------------- |
-| email        | string | Ya       | Email valid                                 |
-| password     | string | Ya       | Min 8 karakter                              |
-| full_name    | string | Ya       | Min 2 karakter                              |
-| role         | enum   | Tidak    | `admin` atau `student` (default: `student`) |
-| phone_number | string | Tidak    | Nomor telepon                               |
+| Field        | Type   | Required | Keterangan     |
+| ------------ | ------ | -------- | -------------- |
+| email        | string | Ya       | Email valid    |
+| password     | string | Ya       | Min 8 karakter |
+| full_name    | string | Ya       | Min 2 karakter |
+| role         | enum   | Tidak    | `admin`        |
+| phone_number | string | Tidak    | Nomor telepon  |
 
 **Response Success (201):**
 
@@ -90,17 +90,17 @@ Mendaftarkan user baru (admin only).
     "refreshToken": "v1.MjAyNC0xMi0y...",
     "user": {
       "id": "uuid-user-id",
-      "email": "user@example.com",
-      "full_name": "John Doe",
-      "role": "student",
+      "email": "admin@example.com",
+      "full_name": "Admin User",
+      "role": "admin",
       "phone_number": "081234567890",
       "avatar_url": null,
-      "created_at": "2024-12-20T12:00:00Z"
+      "created_at": "2025-12-20T12:00:00Z"
     }
   },
   "meta": {
-    "timestamp": "2024-12-20T12:00:00Z",
-    "expiresAt": "2024-12-20T13:00:00Z"
+    "timestamp": "2025-12-20T12:00:00Z",
+    "expiresAt": "2025-12-20T13:00:00Z"
   }
 }
 ```
@@ -142,8 +142,8 @@ Autentikasi user dengan email dan password.
       "role": "student",
       "phone_number": "081234567890",
       "avatar_url": null,
-      "created_at": "2024-12-20T12:00:00Z",
-      "last_login_at": "2024-12-20T12:00:00Z"
+      "created_at": "2025-12-20T12:00:00Z",
+      "last_login_at": "2025-12-20T12:00:00Z"
     }
   }
 }
@@ -200,7 +200,7 @@ Mendapatkan informasi user yang sedang login. **Memerlukan autentikasi.**
     "role": "student",
     "phone_number": "081234567890",
     "avatar_url": null,
-    "created_at": "2024-12-20T12:00:00Z"
+    "created_at": "2025-12-20T12:00:00Z"
   }
 }
 ```
@@ -209,9 +209,9 @@ Mendapatkan informasi user yang sedang login. **Memerlukan autentikasi.**
 
 ### 1.5 Reset Password
 
-**POST** `/api/auth/firebase/reset-password`
+**POST** `/api/auth/reset-password`
 
-Mengirim email reset password.
+Mengirim email reset password (menggunakan Supabase Auth).
 
 **Request Body:**
 
@@ -256,7 +256,7 @@ Mendaftarkan siswa baru untuk kursus. **Public endpoint.**
 
 ```json
 {
-  "idempotency_key": "unique-key-123",
+  "idempotency_key": "550e8400-e29b-41d4-a716-446655440000",
   "course_id": "uuid-course-id",
   "full_name": "John Doe",
   "email": "johndoe@example.com",
@@ -264,9 +264,9 @@ Mendaftarkan siswa baru untuk kursus. **Public endpoint.**
   "birth_place": "Jakarta",
   "birth_date": "2010-05-15",
   "school": "SMP Negeri 1",
-  "class": "8",
+  "class": 8,
   "guardian_name": "Jane Doe",
-  "guardian_wa_number": "081234567890",
+  "guardian_wa_number": "+6281234567890",
   "experience_level": "beginner",
   "preferred_days": ["monday", "wednesday"],
   "preferred_time_range": {
@@ -278,32 +278,37 @@ Mendaftarkan siswa baru untuk kursus. **Public endpoint.**
   "referral_source": "instagram",
   "first_choice_slot_id": "uuid-slot-1",
   "second_choice_slot_id": "uuid-slot-2",
-  "payment_proof": "https://storage.example.com/proof.jpg"
+  "payment_proof": "https://storage.example.com/proof.jpg",
+  "captcha_token": "valid-captcha-token",
+  "consent": true
 }
 ```
 
-| Field                 | Type          | Required | Keterangan                             |
-| --------------------- | ------------- | -------- | -------------------------------------- |
-| idempotency_key       | string        | Ya       | Unique key untuk mencegah duplikasi    |
-| course_id             | uuid          | Ya       | ID kursus yang dipilih                 |
-| full_name             | string        | Ya       | Nama lengkap siswa                     |
-| email                 | string        | Ya       | Email siswa                            |
-| address               | string        | Ya       | Alamat lengkap                         |
-| birth_place           | string        | Ya       | Tempat lahir                           |
-| birth_date            | string        | Ya       | Tanggal lahir (YYYY-MM-DD)             |
-| school                | string        | Ya       | Nama sekolah                           |
-| class                 | string/number | Ya       | Kelas                                  |
-| guardian_name         | string        | Ya       | Nama orang tua/wali                    |
-| guardian_wa_number    | string        | Ya       | Nomor WA wali                          |
-| experience_level      | enum          | Tidak    | `beginner`, `intermediate`, `advanced` |
-| preferred_days        | array         | Tidak    | Hari preferensi                        |
-| preferred_time_range  | object        | Tidak    | Rentang waktu preferensi               |
-| instrument_owned      | boolean       | Tidak    | Apakah punya instrumen                 |
-| notes                 | string        | Tidak    | Catatan tambahan                       |
-| referral_source       | string        | Tidak    | Sumber referensi                       |
-| first_choice_slot_id  | uuid          | Tidak    | Pilihan jadwal pertama                 |
-| second_choice_slot_id | uuid          | Tidak    | Pilihan jadwal kedua                   |
-| payment_proof         | string        | Tidak    | URL bukti pembayaran                   |
+| Field                 | Type    | Required | Keterangan                               |
+| --------------------- | ------- | -------- | ---------------------------------------- |
+| idempotency_key       | uuid    | Ya       | Unique UUID key untuk mencegah duplikasi |
+| course_id             | uuid    | Ya       | ID kursus yang dipilih                   |
+| full_name             | string  | Ya       | Nama lengkap siswa                       |
+| email                 | string  | Ya       | Email siswa                              |
+| address               | string  | Ya       | Alamat lengkap                           |
+| birth_place           | string  | Ya       | Tempat lahir                             |
+| birth_date            | string  | Ya       | Tanggal lahir (YYYY-MM-DD)               |
+| school                | string  | Ya       | Nama sekolah                             |
+| class                 | number  | Ya       | Kelas (1-12)                             |
+| guardian_name         | string  | Ya       | Nama orang tua/wali                      |
+| guardian_wa_number    | string  | Ya       | Nomor WA wali (Format: +62...)           |
+| payment_proof         | string  | Ya       | URL bukti pembayaran                     |
+| captcha_token         | string  | Ya       | Token Captcha                            |
+| consent               | boolean | Ya       | Persetujuan (Must be true)               |
+| experience_level      | enum    | Tidak    | `beginner`, `intermediate`, `advanced`   |
+| preferred_days        | array   | Tidak    | Hari preferensi                          |
+| preferred_time_range  | object  | Tidak    | Rentang waktu preferensi                 |
+| instrument_owned      | boolean | Tidak    | Apakah punya instrumen                   |
+| notes                 | string  | Tidak    | Catatan tambahan                         |
+| referral_source       | string  | Tidak    | Sumber referensi                         |
+| first_choice_slot_id  | uuid    | Tidak    | Pilihan jadwal pertama                   |
+| second_choice_slot_id | uuid    | Tidak    | Pilihan jadwal kedua                     |
+| start_date_target     | string  | Tidak    | Target tanggal mulai                     |
 
 **Response Success (201):**
 
@@ -318,8 +323,8 @@ Mendaftarkan siswa baru untuk kursus. **Public endpoint.**
       "status": "pending",
       "applicant_full_name": "John Doe",
       "applicant_email": "johndoe@example.com",
-      "created_at": "2024-12-20T12:00:00Z",
-      "expires_at": "2024-12-23T12:00:00Z"
+      "created_at": "2025-12-20T12:00:00Z",
+      "expires_at": "2025-12-23T12:00:00Z"
     }
   }
 }
@@ -367,7 +372,7 @@ Mendapatkan daftar instruktur yang tersedia. **Public endpoint.**
   },
   "meta": {
     "count": 1,
-    "timestamp": "2024-12-20T12:00:00Z"
+    "timestamp": "2025-12-20T12:00:00Z"
   }
 }
 ```
@@ -439,7 +444,7 @@ Mencari slot jadwal yang tersedia. **Public endpoint.**
         "instructor_id": "uuid-instructor-id",
         "room_id": "uuid-room-id",
         "room_name": "Ruang Piano 1",
-        "date": "2024-12-21",
+        "date": "2025-12-21",
         "start_time": "14:00",
         "end_time": "15:00",
         "duration": 60
@@ -448,7 +453,7 @@ Mencari slot jadwal yang tersedia. **Public endpoint.**
   },
   "meta": {
     "count": 5,
-    "timestamp": "2024-12-20T12:00:00Z"
+    "timestamp": "2025-12-20T12:00:00Z"
   }
 }
 ```
@@ -475,7 +480,7 @@ Mendapatkan semua booking. **Memerlukan autentikasi (Admin only).**
         "status": "pending",
         "applicant_full_name": "John Doe",
         "applicant_email": "johndoe@example.com",
-        "created_at": "2024-12-20T12:00:00Z",
+        "created_at": "2025-12-20T12:00:00Z",
         "courses": {
           "id": "uuid-course-id",
           "title": "Kursus Gitar Dasar",
@@ -486,7 +491,7 @@ Mendapatkan semua booking. **Memerlukan autentikasi (Admin only).**
   },
   "meta": {
     "count": 10,
-    "timestamp": "2024-12-20T12:00:00Z"
+    "timestamp": "2025-12-20T12:00:00Z"
   }
 }
 ```
@@ -548,7 +553,7 @@ Konfirmasi booking (otomatis membuat record student). **Memerlukan autentikasi (
     "booking": {
       "id": "uuid-booking-id",
       "status": "confirmed",
-      "updated_at": "2024-12-20T12:00:00Z"
+      "updated_at": "2025-12-20T12:00:00Z"
     },
     "student": {
       "id": "uuid-student-id",
@@ -558,7 +563,7 @@ Konfirmasi booking (otomatis membuat record student). **Memerlukan autentikasi (
   },
   "meta": {
     "studentCreated": true,
-    "timestamp": "2024-12-20T12:00:00Z"
+    "timestamp": "2025-12-20T12:00:00Z"
   }
 }
 ```
@@ -580,7 +585,7 @@ Membatalkan booking. **Memerlukan autentikasi.**
     "booking": {
       "id": "uuid-booking-id",
       "status": "cancelled",
-      "updated_at": "2024-12-20T12:00:00Z"
+      "updated_at": "2025-12-20T12:00:00Z"
     }
   }
 }
@@ -621,7 +626,7 @@ Assign jadwal ke booking. **Memerlukan autentikasi (Admin only).**
     "booking": {
       "id": "uuid-booking-id",
       "confirmed_slot_id": "uuid-schedule-id",
-      "updated_at": "2024-12-20T12:00:00Z"
+      "updated_at": "2025-12-20T12:00:00Z"
     }
   }
 }
@@ -672,7 +677,7 @@ Mendapatkan daftar semua kursus. **Public endpoint.**
         "max_students": 5,
         "instrument": "Guitar",
         "is_active": true,
-        "created_at": "2024-12-20T12:00:00Z"
+        "created_at": "2025-12-20T12:00:00Z"
       }
     ],
     "pagination": {
@@ -753,7 +758,7 @@ Membuat kursus baru. **Memerlukan autentikasi (Admin only).**
     "id": "uuid-course-id",
     "title": "Kursus Piano Dasar",
     "is_active": true,
-    "created_at": "2024-12-20T12:00:00Z"
+    "created_at": "2025-12-20T12:00:00Z"
   }
 }
 ```
@@ -776,7 +781,7 @@ Mengupdate kursus. **Memerlukan autentikasi (Admin/Instructor).**
   "data": {
     "id": "uuid-course-id",
     "title": "Kursus Piano Intermediate",
-    "updated_at": "2024-12-20T12:00:00Z"
+    "updated_at": "2025-12-20T12:00:00Z"
   }
 }
 ```
@@ -883,7 +888,7 @@ Mendapatkan statistik dashboard. **Memerlukan autentikasi (Admin only).**
       {
         "id": "uuid-booking-id",
         "status": "pending",
-        "created_at": "2024-12-20T12:00:00Z",
+        "created_at": "2025-12-20T12:00:00Z",
         "users": { "full_name": "John Doe", "email": "john@example.com" },
         "courses": { "title": "Kursus Gitar" }
       }
@@ -918,7 +923,7 @@ Mendapatkan daftar semua user. **Memerlukan autentikasi (Admin only).**
         "email": "user@example.com",
         "full_name": "John Doe",
         "role": "student",
-        "created_at": "2024-12-20T12:00:00Z"
+        "created_at": "2025-12-20T12:00:00Z"
       }
     ],
     "pagination": {
@@ -1354,6 +1359,12 @@ API Gateway menerapkan rate limiting:
 ---
 
 ## Changelog
+
+### v1.0.1 (2025-12-20)
+
+- Update dokumentasi payload booking service (captcha_token, consent, dll)
+- Update date reference to 2025
+- Validasi eksistensi endpoint terhadap service code
 
 ### v1.0.0 (2024-12-20)
 

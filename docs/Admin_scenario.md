@@ -42,12 +42,14 @@ Dokumentasi ini menjelaskan **scenario lengkap** dari sisi frontend (admin) dala
 ### Akses Admin
 
 1. **Login sebagai Admin**
+
    ```
    Email: k423@gmail.com
    Password: Kiana423
    ```
 
 2. **API Base URL**
+
    ```
    Development: http://localhost:3000/api/admin
    Production: https://api.shemamusic.com/api/admin
@@ -62,25 +64,30 @@ Dokumentasi ini menjelaskan **scenario lengkap** dari sisi frontend (admin) dala
 ### Scenario 1: Login ke Sistem Admin
 
 **Langkah 1.1: Akses halaman login admin**
+
 - Admin membuka aplikasi frontend admin
 - Navigasi ke halaman login
 
 **Langkah 1.2: Masukkan kredensial dan login**
+
 - Input email: k423@gmail.com
 - Input password: Kiana423
 - Klik tombol "Login"
 
 **Endpoint API yang dipanggil:**
+
 ```
 POST http://localhost:3000/api/auth/login
 Content-Type: application/json
 
 {
-  "idToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  "email": "k423@gmail.com",
+  "password": "Kiana423"
 }
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -106,21 +113,25 @@ Content-Type: application/json
 ```
 
 **Langkah 1.3: Redirect ke dashboard**
+
 - Setelah login berhasil, frontend menyimpan token
 - Redirect ke halaman dashboard admin
 
 ### Scenario 2: Melihat Dashboard dan Statistik
 
 **Langkah 2.1: Akses dashboard**
+
 - Dari halaman utama admin, klik menu "Dashboard"
 
 **Endpoint API yang dipanggil:**
+
 ```
 GET http://localhost:3000/api/admin/dashboard
 Authorization: Bearer <admin_token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -145,21 +156,25 @@ Authorization: Bearer <admin_token>
 ```
 
 **Langkah 2.2: Review statistik**
+
 - Frontend menampilkan statistik total users, courses, bookings
 - Admin dapat melihat revenue dan aktivitas terbaru
 
 ### Scenario 3: Mengelola Pengguna (Users Management)
 
 **Langkah 3.1: Melihat daftar semua pengguna**
+
 - Klik menu "Users" atau "User Management"
 
 **Endpoint API yang dipanggil:**
+
 ```
 GET http://localhost:3000/api/admin/users?page=1&limit=10
 Authorization: Bearer <admin_token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -195,10 +210,12 @@ Authorization: Bearer <admin_token>
 ```
 
 **Langkah 3.2: Update informasi pengguna**
+
 - Klik edit pada user tertentu
 - Update nama atau nomor telepon
 
 **Endpoint API yang dipanggil:**
+
 ```
 PUT http://localhost:3000/api/admin/users/uuid-user-1
 Authorization: Bearer <admin_token>
@@ -211,6 +228,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -231,15 +249,18 @@ Content-Type: application/json
 ### Scenario 4: Mengelola Siswa (Students Management)
 
 **Langkah 4.1: Melihat daftar siswa**
+
 - Klik menu "Students"
 
 **Endpoint API yang dipanggil:**
+
 ```
 GET http://localhost:3000/api/admin/students?page=1&limit=10
 Authorization: Bearer <admin_token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -265,15 +286,18 @@ Authorization: Bearer <admin_token>
 ```
 
 **Langkah 4.2: Melihat detail siswa**
+
 - Klik pada siswa tertentu untuk melihat detail
 
 **Endpoint API yang dipanggil:**
+
 ```
 GET http://localhost:3000/api/admin/students/uuid-student-1
 Authorization: Bearer <admin_token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -298,10 +322,12 @@ Authorization: Bearer <admin_token>
 ```
 
 **Langkah 4.3: Membuat siswa baru**
+
 - Klik tombol "Add Student"
 - Isi form dengan email, nama, nomor telepon
 
 **Endpoint API yang dipanggil:**
+
 ```
 POST http://localhost:3000/api/admin/students
 Authorization: Bearer <admin_token>
@@ -315,6 +341,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -331,9 +358,11 @@ Content-Type: application/json
 ```
 
 **Langkah 4.4: Update siswa**
+
 - Edit informasi siswa
 
 **Endpoint API yang dipanggil:**
+
 ```
 PUT http://localhost:3000/api/admin/students/uuid-student-1
 Authorization: Bearer <admin_token>
@@ -346,15 +375,18 @@ Content-Type: application/json
 ```
 
 **Langkah 4.5: Hapus siswa**
+
 - Klik delete pada siswa tertentu
 
 **Endpoint API yang dipanggil:**
+
 ```
 DELETE http://localhost:3000/api/admin/students/uuid-student-1
 Authorization: Bearer <admin_token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -370,15 +402,18 @@ Authorization: Bearer <admin_token>
 ### Scenario 5: Mengelola Kursus (Courses Management)
 
 **Langkah 5.1: Melihat daftar kursus**
+
 - Klik menu "Courses"
 
 **Endpoint API yang dipanggil:**
+
 ```
 GET http://localhost:3000/api/admin/courses
 Authorization: Bearer <admin_token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -403,15 +438,18 @@ Authorization: Bearer <admin_token>
 ### Scenario 6: Mengelola Booking (Bookings Management)
 
 **Langkah 6.1: Melihat daftar booking**
+
 - Klik menu "Bookings"
 
 **Endpoint API yang dipanggil:**
+
 ```
 GET http://localhost:3000/api/admin/bookings
 Authorization: Bearer <admin_token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -431,15 +469,18 @@ Authorization: Bearer <admin_token>
 ```
 
 **Langkah 6.2: Konfirmasi booking**
+
 - Klik confirm pada booking pending
 
 **Endpoint API yang dipanggil:**
+
 ```
 POST http://localhost:3000/api/booking/uuid-booking-1/confirm
 Authorization: Bearer <admin_token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -455,9 +496,11 @@ Authorization: Bearer <admin_token>
 ```
 
 **Langkah 6.3: Assign slot ke booking**
+
 - Pilih slot yang tersedia untuk booking
 
 **Endpoint API yang dipanggil:**
+
 ```
 POST http://localhost:3000/api/booking/admin/bookings/uuid-booking-1/assign-slot
 Authorization: Bearer <admin_token>
@@ -469,6 +512,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -486,15 +530,18 @@ Content-Type: application/json
 ### Scenario 7: Mengelola Instructor (Instructor Management)
 
 **Langkah 7.1: Melihat daftar instruktur**
+
 - Klik menu "Instructors"
 
 **Endpoint API yang dipanggil:**
+
 ```
 GET http://localhost:3000/api/admin/instructor?page=1&limit=10
 Authorization: Bearer <admin_token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -521,15 +568,18 @@ Authorization: Bearer <admin_token>
 ```
 
 **Langkah 7.2: Melihat detail instruktur**
+
 - Klik pada instruktur tertentu untuk melihat detail
 
 **Endpoint API yang dipanggil:**
+
 ```
 GET http://localhost:3000/api/admin/instructor/uuid-instructor-1
 Authorization: Bearer <admin_token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -552,10 +602,12 @@ Authorization: Bearer <admin_token>
 ```
 
 **Langkah 7.3: Buat instruktur baru**
+
 - Klik menu "Create Instructor"
 - Isi form dengan detail instruktur
 
 **Endpoint API yang dipanggil:**
+
 ```
 POST http://localhost:3000/api/admin/instructor
 Authorization: Bearer <admin_token>
@@ -572,6 +624,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -597,10 +650,12 @@ Content-Type: application/json
 ```
 
 **Langkah 7.4: Update instruktur**
+
 - Klik edit pada instruktur tertentu
 - Update informasi yang diperlukan
 
 **Endpoint API yang dipanggil:**
+
 ```
 PUT http://localhost:3000/api/admin/instructor/uuid-instructor-1
 Authorization: Bearer <admin_token>
@@ -614,6 +669,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -629,15 +685,18 @@ Content-Type: application/json
 ```
 
 **Langkah 7.5: Hapus instruktur**
+
 - Klik delete pada instruktur tertentu
 
 **Endpoint API yang dipanggil:**
+
 ```
 DELETE http://localhost:3000/api/admin/instructor/uuid-instructor-1
 Authorization: Bearer <admin_token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -650,10 +709,12 @@ Authorization: Bearer <admin_token>
 ### Scenario 8: Penjadwalan Instructor untuk Course (Assign Instructor)
 
 **Langkah 8.1: Buat kursus baru**
+
 - Klik menu "Create Course"
 - Isi detail kursus
 
 **Endpoint API yang dipanggil:**
+
 ```
 POST http://localhost:3000/api/courses
 Authorization: Bearer <admin_token>
@@ -671,6 +732,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -693,9 +755,11 @@ Content-Type: application/json
 ```
 
 **Langkah 8.2: Assign ruang untuk kursus**
+
 - Pilih ruang yang tersedia
 
 **Endpoint API yang dipanggil:**
+
 ```
 POST http://localhost:3000/api/booking/admin/assign-room
 Authorization: Bearer <admin_token>
@@ -713,6 +777,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -729,15 +794,18 @@ Content-Type: application/json
 ```
 
 **Langkah 8.3: Monitor pendaftaran siswa**
+
 - Lihat booking yang masuk untuk kursus tersebut
 
 **Endpoint API yang dipanggil:**
+
 ```
 GET http://localhost:3000/api/booking/admin/bookings/pending
 Authorization: Bearer <admin_token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -762,15 +830,18 @@ Authorization: Bearer <admin_token>
 ```
 
 **Langkah 8.4: Konfirmasi dan assign slot untuk siswa**
+
 - Konfirmasi booking dan assign slot
 
 **Endpoint API yang dipanggil:**
+
 ```
 POST http://localhost:3000/api/booking/uuid-booking-1/confirm
 Authorization: Bearer <admin_token>
 ```
 
 Kemudian assign slot:
+
 ```
 POST http://localhost:3000/api/booking/admin/bookings/uuid-booking-1/assign-slot
 Authorization: Bearer <admin_token>
@@ -784,15 +855,18 @@ Content-Type: application/json
 ### Scenario 9: Monitoring dan Reporting
 
 **Langkah 9.1: Melihat laporan aktivitas**
+
 - Akses halaman reports atau logs
 
 **Endpoint API yang dipanggil:**
+
 ```
 GET http://localhost:3000/api/admin/reports/activities?date_from=2025-11-01&date_to=2025-11-30
 Authorization: Bearer <admin_token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -813,15 +887,18 @@ Authorization: Bearer <admin_token>
 ```
 
 **Langkah 9.2: Melihat statistik revenue**
+
 - Dari dashboard, lihat revenue bulanan
 
 **Endpoint API yang dipanggil:**
+
 ```
 GET http://localhost:3000/api/admin/reports/revenue?month=11&year=2025
 Authorization: Bearer <admin_token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -842,15 +919,18 @@ Authorization: Bearer <admin_token>
 ### Scenario 10: Logout dari Sistem
 
 **Langkah 10.1: Logout**
+
 - Klik tombol logout di header admin
 
 **Endpoint API yang dipanggil:**
+
 ```
 POST http://localhost:3000/api/auth/logout
 Authorization: Bearer <admin_token>
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -864,10 +944,11 @@ Authorization: Bearer <admin_token>
 ```
 
 **Langkah 10.2: Redirect ke halaman login**
+
 - Frontend menghapus token dan redirect ke login page
 
 ---
 
-*Dokumentasi scenario admin diperbarui pada: December 2, 2025*
+_Dokumentasi scenario admin diperbarui pada: December 2, 2025_
 
-*Scenario ini mencakup semua tugas dan fungsi admin yang tersedia di sistem Shema Music, termasuk login, dashboard, user management, student management, course management, booking management, instructor management (CRUD), instructor assignment, dan monitoring/reporting.*
+_Scenario ini mencakup semua tugas dan fungsi admin yang tersedia di sistem Shema Music, termasuk login, dashboard, user management, student management, course management, booking management, instructor management (CRUD), instructor assignment, dan monitoring/reporting._
