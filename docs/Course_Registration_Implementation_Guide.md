@@ -485,10 +485,7 @@
     | address            | string  | Minimal 1 karakter                        | "Jl. Sudirman No. 123, Jakarta Selatan"    |
     | birth_place        | string  | Minimal 1 karakter                        | "Jakarta"                                  |
     | birth_date         | string  | Format YYYY-MM-DD                         | "2010-05-15"                               |
-    | school             | string  | Minimal 1 karakter                        | "SD Negeri 1 Jakarta"                      |
-    | class              | number  | Angka 1-12                                | 5                                          |
-    | guardian_name      | string  | Minimal 1 karakter                        | "Budi Rahman"                              |
-    | guardian_wa_number | string  | Harus dimulai "+62"                       | "+6281234567890"                           |
+
     | consent            | boolean | Harus `true`                              | true                                       |
     | captcha_token      | string  | Token dari reCAPTCHA                      | "03AGdBq24PBCbwiDRaS\_..."                 |
     | idempotency_key    | string  | UUID unik untuk mencegah duplikasi        | "550e8400-e29b-41d4-a716-446655440001"     |
@@ -506,8 +503,14 @@
     | instrument_owned     | boolean | Apakah sudah memiliki alat musik           | false                           |
     | notes                | string  | Catatan tambahan                           | "Anak sangat tertarik piano"    |
     | referral_source      | enum    | Sumber informasi                           | "instagram"                     |
+    | type_course          | enum    | "reguler" \| "hobby" \| "karyawan" \| "ministry" \| "privat" | "reguler" |
+    | school               | string  | Minimal 1 karakter (Optional)             | "SD Negeri 1 Jakarta"           |
+    | class                | string  | String (contoh: "5", "10 IPA", "3 B")     | "5"                             |
+    | guardian_name        | string  | Minimal 1 karakter (Optional)             | "Budi Rahman"                   |
+    | guardian_wa_number   | string  | Harus dimulai "+62" (Optional)            | "+6281234567890"                |
 
     **Enum referral_source:** `"instagram"` | `"facebook"` | `"google"` | `"tiktok"` | `"friend"` | `"website"` | `"other"`
+    **Enum type_course:** `"reguler"` | `"hobby"` | `"karyawan"` | `"ministry"` | `"privat"`
 
     #### C. Preferensi Instructor & Jadwal (Optional)
 
@@ -557,7 +560,7 @@
     "birth_place": "Jakarta",
     "birth_date": "2010-05-15",
     "school": "SD Negeri 1 Jakarta",
-    "class": 5,
+    "class": "5",
     "guardian_name": "Budi Rahman",
     "guardian_wa_number": "+6281234567890",
     "consent": true,
@@ -574,6 +577,7 @@
     "instrument_owned": false,
     "notes": "Anak sangat tertarik dengan piano sejak kecil. Mohon jadwal sore karena sekolah sampai jam 14:00.",
     "referral_source": "instagram",
+    "type_course": "reguler",
     "first_preference": {
         "day": "Monday",
         "start_time": "15:00",
@@ -619,7 +623,7 @@
         "applicant_birth_place": "Jakarta",
         "applicant_birth_date": "2010-05-15",
         "applicant_school": "SD Negeri 1 Jakarta",
-        "applicant_class": 5,
+        "applicant_class": "5",
         "first_preference": {
             "day": "Monday",
             "start_time": "15:00",
