@@ -335,9 +335,9 @@ services:
       - SUPABASE_URL=${SUPABASE_URL}
       - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
       - SUPABASE_ANON_KEY=${SUPABASE_ANON_KEY}
-    volumes:
-      - ./notification:/app
-      - /app/node_modules
+    # volumes:  # REMOVED: Overwriting /app with local (empty) folder breaks dependencies
+    #   - ./notification:/app
+    #   - /app/node_modules
     depends_on:
       redis:
         condition: service_healthy
