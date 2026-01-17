@@ -1,0 +1,8 @@
+{
+  "assessment_data": {
+    "age": 25,
+    "instruments": ["piano"],
+    "experience_level": "beginner",
+    "learning_goals": ["play for fun"]
+  }
+}
